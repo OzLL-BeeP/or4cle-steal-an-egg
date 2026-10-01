@@ -1,7 +1,8 @@
--- OR4CLE — util.lua
-local Players = game:GetService("Players")
-local RunSvc  = game:GetService("RunService")
+-- OR4CLE — util.lua (no os.*)
+local Players  = game:GetService("Players")
+local RunSvc   = game:GetService("RunService")
 local TweenSvc = game:GetService("TweenService")
+local HttpSvc  = game:GetService("HttpService")
 
 local UTIL = {}
 
@@ -38,12 +39,11 @@ end
 -- NOTIFY
 function UTIL.notify(text, dur)
     dur = dur or 3
-    local ok = pcall(function()
+    pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "OR4CLE", Text = tostring(text), Duration = dur,
         })
     end)
-    if not ok then warn("[OR4CLE] " .. tostring(text)) end
 end
 
 -- SAFE
@@ -121,7 +121,7 @@ function UTIL.pushInfo(e)
     local c = _G.OR4CLE and _G.OR4CLE.config
     local max = (c and c.Info and c.Info.MaxSlots) or 10
     e = e or {}
-    e.timestamp = e.timestamp or tick()
+    e.timestamp = e.timestamp or (tick and tick() or 0)
     e.expired = false
     table.insert(q, 1, e)
     while #q > max do table.remove(q, #q) end
@@ -132,15 +132,13 @@ function UTIL.clearInfo()
     for i = #q, 1, -1 do q[i] = nil end
 end
 
--- CLOCK — pakai tick() biar aman di semua executor
+-- CLOCK — hitung dari tick() mod 86400
 function UTIL.getClock()
-    local t = nil
-    pcall(function() t = os.date("*t") end)
-    if t and t.hour then
-        return string.format("%02d:%02d", t.hour, t.min)
+    local t = 0
+    if type(tick) == "function" then
+        pcall(function() t = tick() end)
     end
-    -- fallback: hitung manual dari tick()
-    local secs = math.floor(tick()) % 86400
+    local secs = math.floor(t) % 86400
     local h = math.floor(secs / 3600)
     local mn = math.floor((secs % 3600) / 60)
     return string.format("%02d:%02d", h, mn)
@@ -153,7 +151,7 @@ end
 function UTIL.saveTable(path, tbl)
     if not UTIL.hasFileAPI() then return false end
     local ok = pcall(function()
-        writefile(path, game:GetService("HttpService"):JSONEncode(tbl))
+        writefile(path, HttpSvc:JSONEncode(tbl))
     end)
     return ok
 end
@@ -161,7 +159,7 @@ function UTIL.loadTable(path)
     if not UTIL.hasFileAPI() then return nil end
     local ok, data = pcall(function()
         if isfile and isfile(path) then
-            return game:GetService("HttpService"):JSONDecode(readfile(path))
+            return HttpSvc:JSONDecode(readfile(path))
         end
     end)
     if ok then return data end
