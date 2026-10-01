@@ -1,10 +1,8 @@
 -- OR4CLE — util.lua
-
 local Players = game:GetService("Players")
 local RunSvc  = game:GetService("RunService")
-local Tween   = game:GetService("TweenService")
+local TweenSvc = game:GetService("TweenService")
 local Http    = game:GetService("HttpService")
-local RS      = game:GetService("ReplicatedStorage")
 
 local UTIL = {}
 
@@ -71,13 +69,15 @@ end
 function UTIL.tween(obj, props, time, style, dir)
     if not obj then return end
     local i = TweenInfo.new(time or 0.2, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out)
-    local t = Tween:Create(obj, i, props); t:Play(); return t
+    local t = TweenSvc:Create(obj, i, props)
+    t:Play()
+    return t
 end
 
 -- RARITY
 function UTIL.getRank(r)
     local c = _G.OR4CLE and _G.OR4CLE.config
-    return (c and c.RarityRank[r]) or 0
+    return (c and c.RarityRank and c.RarityRank[r]) or 0
 end
 function UTIL.passesFilter(r, min)
     if not min or min == "All" then return true end
@@ -85,7 +85,7 @@ function UTIL.passesFilter(r, min)
 end
 function UTIL.getRarityColor(r)
     local c = _G.OR4CLE and _G.OR4CLE.config
-    if not c then return Color3.fromRGB(235,235,245) end
+    if not c or not c.RarityColor then return Color3.fromRGB(235,235,245) end
     return c.RarityColor[r] or Color3.fromRGB(235,235,245)
 end
 
@@ -120,7 +120,6 @@ function UTIL.ensureInfoQueue()
     _G.OR4CLE.registry.info = _G.OR4CLE.registry.info or {}
     return _G.OR4CLE.registry.info
 end
-
 function UTIL.pushInfo(e)
     local q = UTIL.ensureInfoQueue()
     local c = _G.OR4CLE and _G.OR4CLE.config
@@ -132,12 +131,10 @@ function UTIL.pushInfo(e)
     while #q > max do table.remove(q, #q) end
     return q
 end
-
 function UTIL.clearInfo()
     local q = UTIL.ensureInfoQueue()
     for i = #q, 1, -1 do q[i] = nil end
 end
-
 function UTIL.getClock()
     local t = os.date("*t")
     return string.format("%02d:%02d", t.hour, t.min)
@@ -162,28 +159,22 @@ end
 -- REMOTE HELPERS
 function UTIL.getRemote(path)
     local cfg = _G.OR4CLE and _G.OR4CLE.config
-    if not cfg then return nil end
+    if not cfg or not cfg.Remotes then return nil end
     local base = cfg.Remotes.Base
-    -- path bisa "RF/..." atau "RE/..."
-    local parts = {}
-    for p in (base .. "/" .. path):gmatch("[^%.]+") do
-        for q in p:gmatch("[^/]+") do table.insert(parts, q) end
-    end
+    local full = base .. "." .. path:gsub("/", ".")
     local node = game
-    for _, p in ipairs(parts) do
+    for p in full:gmatch("[^%.]+") do
         node = node:FindFirstChild(p)
         if not node then return nil end
     end
     return node
 end
-
 function UTIL.fireRF(path, ...)
     local r = UTIL.getRemote(path)
     if not r then return nil end
     local ok, res = pcall(function() return r:InvokeServer(...) end)
     return ok and res or nil
 end
-
 function UTIL.fireRE(path, ...)
     local r = UTIL.getRemote(path)
     if not r then return false end
@@ -195,7 +186,6 @@ function UTIL.magnitude(a, b)
     if not a or not b then return math.huge end
     return (a.Position - b.Position).Magnitude
 end
-
 function UTIL.forEachDescendant(root, class, cb)
     if not root then return end
     for _, v in ipairs(root:GetDescendants()) do

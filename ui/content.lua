@@ -55,4 +55,6 @@ function C.new(parent)
     end
 
     return self
-endreturn C
+end
+
+return C
