@@ -64,6 +64,16 @@ function C.new(ctx)
     gui.Enabled = false
     gui.Parent = pg
 
+    -- guard: re-parent kalau nil (race condition)
+    if not gui.Parent then
+        local ok, pg2 = pcall(function()
+            return Players.LocalPlayer:WaitForChild("PlayerGui", 5)
+        end)
+        if ok and pg2 then
+            gui.Parent = pg2
+        end
+    end
+
     -- wrapper
     local wrap = Instance.new("Frame")
     wrap.Name = "Wrap"
