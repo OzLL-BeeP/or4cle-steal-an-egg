@@ -2,7 +2,6 @@
 local Players = game:GetService("Players")
 local RunSvc  = game:GetService("RunService")
 local TweenSvc = game:GetService("TweenService")
-local Http    = game:GetService("HttpService")
 
 local UTIL = {}
 
@@ -50,11 +49,7 @@ end
 -- SAFE
 function UTIL.safeCall(fn, ...)
     local ok, res = pcall(fn, ...)
-    if not ok then
-        local cfg = _G.OR4CLE and _G.OR4CLE.config
-        if cfg and cfg.Debug then warn("[OR4CLE] " .. tostring(res)) end
-        return nil
-    end
+    if not ok then return nil end
     return res
 end
 
@@ -69,15 +64,16 @@ end
 function UTIL.tween(obj, props, time, style, dir)
     if not obj then return end
     local i = TweenInfo.new(time or 0.2, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out)
-    local t = TweenSvc:Create(obj, i, props)
-    t:Play()
-    return t
+    local tw = TweenSvc:Create(obj, i, props)
+    tw:Play()
+    return tw
 end
 
 -- RARITY
 function UTIL.getRank(r)
     local c = _G.OR4CLE and _G.OR4CLE.config
-    return (c and c.RarityRank and c.RarityRank[r]) or 0
+    if not c or not c.RarityRank then return 0 end
+    return c.RarityRank[r] or 0
 end
 function UTIL.passesFilter(r, min)
     if not min or min == "All" then return true end
@@ -125,7 +121,7 @@ function UTIL.pushInfo(e)
     local c = _G.OR4CLE and _G.OR4CLE.config
     local max = (c and c.Info and c.Info.MaxSlots) or 10
     e = e or {}
-    e.timestamp = e.timestamp or os.time()
+    e.timestamp = e.timestamp or tick()
     e.expired = false
     table.insert(q, 1, e)
     while #q > max do table.remove(q, #q) end
@@ -135,9 +131,19 @@ function UTIL.clearInfo()
     local q = UTIL.ensureInfoQueue()
     for i = #q, 1, -1 do q[i] = nil end
 end
+
+-- CLOCK — pakai tick() biar aman di semua executor
 function UTIL.getClock()
-    local t = os.date("*t")
-    return string.format("%02d:%02d", t.hour, t.min)
+    local t = nil
+    pcall(function() t = os.date("*t") end)
+    if t and t.hour then
+        return string.format("%02d:%02d", t.hour, t.min)
+    end
+    -- fallback: hitung manual dari tick()
+    local secs = math.floor(tick()) % 86400
+    local h = math.floor(secs / 3600)
+    local mn = math.floor((secs % 3600) / 60)
+    return string.format("%02d:%02d", h, mn)
 end
 
 -- PERSISTENCE
@@ -146,22 +152,27 @@ function UTIL.hasFileAPI()
 end
 function UTIL.saveTable(path, tbl)
     if not UTIL.hasFileAPI() then return false end
-    return pcall(function() writefile(path, Http:JSONEncode(tbl)) end)
+    local ok = pcall(function()
+        writefile(path, game:GetService("HttpService"):JSONEncode(tbl))
+    end)
+    return ok
 end
 function UTIL.loadTable(path)
     if not UTIL.hasFileAPI() then return nil end
     local ok, data = pcall(function()
-        if isfile and isfile(path) then return Http:JSONDecode(readfile(path)) end
+        if isfile and isfile(path) then
+            return game:GetService("HttpService"):JSONDecode(readfile(path))
+        end
     end)
-    return ok and data or nil
+    if ok then return data end
+    return nil
 end
 
 -- REMOTE HELPERS
 function UTIL.getRemote(path)
     local cfg = _G.OR4CLE and _G.OR4CLE.config
     if not cfg or not cfg.Remotes then return nil end
-    local base = cfg.Remotes.Base
-    local full = base .. "." .. path:gsub("/", ".")
+    local full = cfg.Remotes.Base .. "." .. path:gsub("/", ".")
     local node = game
     for p in full:gmatch("[^%.]+") do
         node = node:FindFirstChild(p)
@@ -173,7 +184,8 @@ function UTIL.fireRF(path, ...)
     local r = UTIL.getRemote(path)
     if not r then return nil end
     local ok, res = pcall(function() return r:InvokeServer(...) end)
-    return ok and res or nil
+    if ok then return res end
+    return nil
 end
 function UTIL.fireRE(path, ...)
     local r = UTIL.getRemote(path)
