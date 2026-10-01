@@ -1,0 +1,23 @@
+# dump hasil recon — jangan ke-push
+dumps/
+
+# shell script lokal (see.sh dll)
+*.sh
+
+# log
+*.log
+
+# editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# termux backup
+*.bak
+*.orig
