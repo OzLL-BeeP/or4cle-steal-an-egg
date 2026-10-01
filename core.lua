@@ -1,7 +1,6 @@
--- OR4CLE — util.lua (final, no Enum in tween)
-local Players  = game:GetService("Players")
-local TweenSvc = game:GetService("TweenService")
-local HttpSvc  = game:GetService("HttpService")
+-- OR4CLE — core.lua (delta-safe)
+local Players = game:GetService("Players")
+local HttpSvc = game:GetService("HttpService")
 
 local UTIL = {}
 
@@ -55,22 +54,25 @@ function UTIL.deepCopy(t)
     return o
 end
 
--- TWEEN — no Enum, pakai default TweenInfo
 function UTIL.tween(obj, props, time)
     if not obj or not props then return nil end
-    local ok, tw = pcall(function()
-        local i = TweenInfo.new(time or 0.2)
-        return TweenSvc:Create(obj, i, props)
+    local ok, svc = pcall(function() return game:GetService("TweenService") end)
+    if not ok or not svc then return nil end
+    local ok2, tw = pcall(function()
+        return svc:Create(obj, TweenInfo.new(time or 0.2), props)
     end)
-    if not ok or not tw then return nil end
+    if not ok2 or not tw then return nil end
     pcall(function() tw:Play() end)
     return tw
 end
 
 function UTIL.getRank(r)
+    if not r then return 0 end
     local c = _G.OR4CLE and _G.OR4CLE.config
     if not c or not c.RarityRank then return 0 end
-    return c.RarityRank[r] or 0
+    local rank = c.RarityRank[r]
+    if rank == nil then return 0 end
+    return rank
 end
 function UTIL.passesFilter(r, min)
     if not min or min == "All" then return true end
