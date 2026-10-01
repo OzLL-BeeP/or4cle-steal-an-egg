@@ -47,7 +47,7 @@ OR4CLE.ui = {
     sidebar = safeLoad("ui/sidebar.lua"),
     tabs    = safeLoad("ui/tabs.lua"),
     content = safeLoad("ui/content.lua"),
-    pages   = safeLoad("ui/pages.lua"),
+    pages   = safeLoad("ui/pages3.lua"),
 }
 OR4CLE.components = {
     toggle        = safeLoad("ui/components/toggle.lua"),
