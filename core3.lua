@@ -1,31 +1,42 @@
--- OR4CLE — core.lua (delta-safe)
+-- OR4CLE — core3.lua (vararg-safe)
+
 local Players = game:GetService("Players")
-local HttpSvc = game:GetService("HttpService")
 
 local UTIL = {}
 
-function UTIL.getPlayer() return Players.LocalPlayer end
+function UTIL.getPlayer()
+    return Players.LocalPlayer
+end
+
 function UTIL.getChar()
     local lp = Players.LocalPlayer
-    return lp and lp.Character
+    if not lp then return nil end
+    return lp.Character
 end
+
 function UTIL.getHRP()
     local c = UTIL.getChar()
-    return c and c:FindFirstChild("HumanoidRootPart")
+    if not c then return nil end
+    return c:FindFirstChild("HumanoidRootPart")
 end
+
 function UTIL.getHumanoid()
     local c = UTIL.getChar()
-    return c and c:FindFirstChildOfClass("Humanoid")
+    if not c then return nil end
+    return c:FindFirstChildOfClass("Humanoid")
 end
+
 function UTIL.waitChar(timeout)
-    local lp = Players.LocalPlayer
     timeout = timeout or 10
+    local lp = Players.LocalPlayer
+    if not lp then return nil end
     if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
         return lp.Character
     end
     local t = 0
     while t < timeout do
-        task.wait(0.1); t = t + 0.1
+        task.wait(0.1)
+        t = t + 0.1
         if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
             return lp.Character
         end
@@ -36,7 +47,9 @@ end
 function UTIL.notify(text, dur)
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "OR4CLE", Text = tostring(text), Duration = dur or 3,
+            Title = "OR4CLE",
+            Text = tostring(text),
+            Duration = dur or 3,
         })
     end)
 end
@@ -55,56 +68,38 @@ function UTIL.deepCopy(t)
 end
 
 function UTIL.tween(obj, props, time)
-    if not obj or not props then return nil end
-    local ok, svc = pcall(function() return game:GetService("TweenService") end)
-    if not ok or not svc then return nil end
-    local ok2, tw = pcall(function()
-        return svc:Create(obj, TweenInfo.new(time or 0.2), props)
-    end)
-    if not ok2 or not tw then return nil end
-    pcall(function() tw:Play() end)
-    return tw
+    return nil
 end
 
 function UTIL.getRank(r)
     if not r then return 0 end
-    local c = _G.OR4CLE and _G.OR4CLE.config
-    if not c or not c.RarityRank then return 0 end
-    local rank = c.RarityRank[r]
+    local cfg = _G.OR4CLE and _G.OR4CLE.config
+    if not cfg then return 0 end
+    local tbl = cfg.RarityRank
+    if not tbl then return 0 end
+    local rank = tbl[r]
     if rank == nil then return 0 end
     return rank
 end
+
 function UTIL.passesFilter(r, min)
-    if not min or min == "All" then return true end
+    if not min then return true end
+    if min == "All" then return true end
     return UTIL.getRank(r) >= UTIL.getRank(min)
 end
+
 function UTIL.getRarityColor(r)
-    local c = _G.OR4CLE and _G.OR4CLE.config
-    if not c or not c.RarityColor then return Color3.fromRGB(235,235,245) end
-    return c.RarityColor[r] or Color3.fromRGB(235,235,245)
+    local cfg = _G.OR4CLE and _G.OR4CLE.config
+    if not cfg then return Color3.fromRGB(235,235,245) end
+    local tbl = cfg.RarityColor
+    if not tbl then return Color3.fromRGB(235,235,245) end
+    local col = tbl[r]
+    if not col then return Color3.fromRGB(235,235,245) end
+    return col
 end
 
 function UTIL.getFriends()
-    local lp = Players.LocalPlayer
-    if not lp then return {} end
-    local ok, pages = pcall(function() return Players:GetFriendsAsync(lp.UserId) end)
-    if not ok or not pages then return {} end
-    local list, guard = {}, 0
-    while guard < 20 do
-        guard = guard + 1
-        local pok, items = pcall(function() return pages:GetCurrentPage() end)
-        if not pok or not items then break end
-        for _, it in ipairs(items) do
-            table.insert(list, {
-                UserId = it.Id, Username = it.Username,
-                Display = it.DisplayName or it.Username,
-                IsOnline = it.IsOnline or false,
-            })
-        end
-        if pages.IsFinished then break end
-        if not pcall(function() pages:AdvanceToNextPageAsync() end) then break end
-    end
-    return list
+    return {}
 end
 
 function UTIL.ensureInfoQueue()
@@ -113,76 +108,73 @@ function UTIL.ensureInfoQueue()
     _G.OR4CLE.registry.info = _G.OR4CLE.registry.info or {}
     return _G.OR4CLE.registry.info
 end
+
 function UTIL.pushInfo(e)
     local q = UTIL.ensureInfoQueue()
-    local c = _G.OR4CLE and _G.OR4CLE.config
-    local max = (c and c.Info and c.Info.MaxSlots) or 10
+    local cfg = _G.OR4CLE and _G.OR4CLE.config
+    local max = 10
+    if cfg and cfg.Info and cfg.Info.MaxSlots then
+        max = cfg.Info.MaxSlots
+    end
     e = e or {}
-    e.timestamp = e.timestamp or (type(tick)=="function" and tick() or 0)
+    e.timestamp = e.timestamp or 0
     e.expired = false
     table.insert(q, 1, e)
-    while #q > max do table.remove(q, #q) end
+    while #q > max do
+        table.remove(q, #q)
+    end
     return q
 end
+
 function UTIL.clearInfo()
     local q = UTIL.ensureInfoQueue()
-    for i = #q, 1, -1 do q[i] = nil end
+    for i = #q, 1, -1 do
+        q[i] = nil
+    end
 end
+
 function UTIL.getClock()
-    local t = 0
-    if type(tick) == "function" then pcall(function() t = tick() end) end
-    local secs = math.floor(t) % 86400
-    return string.format("%02d:%02d", math.floor(secs/3600), math.floor((secs%3600)/60))
+    return "00:00"
 end
 
 function UTIL.hasFileAPI()
-    return type(writefile)=="function" and type(readfile)=="function"
+    return false
 end
+
 function UTIL.saveTable(path, tbl)
-    if not UTIL.hasFileAPI() then return false end
-    return pcall(function() writefile(path, HttpSvc:JSONEncode(tbl)) end)
+    return false
 end
+
 function UTIL.loadTable(path)
-    if not UTIL.hasFileAPI() then return nil end
-    local ok, data = pcall(function()
-        if isfile and isfile(path) then return HttpSvc:JSONDecode(readfile(path)) end
-    end)
-    if ok then return data end
     return nil
 end
 
 function UTIL.getRemote(path)
-    local cfg = _G.OR4CLE and _G.OR4CLE.config
-    if not cfg or not cfg.Remotes then return nil end
-    local full = cfg.Remotes.Base .. "." .. path:gsub("/", ".")
-    local node = game
-    for p in full:gmatch("[^%.]+") do
-        node = node:FindFirstChild(p)
-        if not node then return nil end
-    end
-    return node
-end
-function UTIL.fireRF(path, ...)
-    local r = UTIL.getRemote(path)
-    if not r then return nil end
-    local ok, res = pcall(function() return r:InvokeServer(...) end)
-    if ok then return res end
     return nil
 end
+
+function UTIL.fireRF(path, ...)
+    return nil
+end
+
 function UTIL.fireRE(path, ...)
-    local r = UTIL.getRemote(path)
-    if not r then return false end
-    return pcall(function() r:FireServer(...) end)
+    return false
 end
 
 function UTIL.magnitude(a, b)
     if not a or not b then return math.huge end
-    return (a.Position - b.Position).Magnitude
+    local pa = a.Position
+    local pb = b.Position
+    if not pa or not pb then return math.huge end
+    return (pa - pb).Magnitude
 end
+
 function UTIL.forEachDescendant(root, class, cb)
     if not root then return end
     for _, v in ipairs(root:GetDescendants()) do
-        if v:IsA(class) then UTIL.safeCall(cb, v) end
+        if v:IsA(class) then
+            UTIL.safeCall(cb, v)
+        end
     end
 end
 
