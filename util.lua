@@ -1,11 +1,10 @@
--- OR4CLE — util.lua (fixed)
+-- OR4CLE — util.lua (final, no Enum in tween)
 local Players  = game:GetService("Players")
 local TweenSvc = game:GetService("TweenService")
 local HttpSvc  = game:GetService("HttpService")
 
 local UTIL = {}
 
--- PLAYER
 function UTIL.getPlayer() return Players.LocalPlayer end
 function UTIL.getChar()
     local lp = Players.LocalPlayer
@@ -35,7 +34,6 @@ function UTIL.waitChar(timeout)
     return nil
 end
 
--- NOTIFY
 function UTIL.notify(text, dur)
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -44,7 +42,6 @@ function UTIL.notify(text, dur)
     end)
 end
 
--- SAFE
 function UTIL.safeCall(fn, ...)
     local ok, res = pcall(fn, ...)
     if not ok then return nil end
@@ -58,15 +55,11 @@ function UTIL.deepCopy(t)
     return o
 end
 
--- TWEEN (safe)
-function UTIL.tween(obj, props, time, style, dir)
+-- TWEEN — no Enum, pakai default TweenInfo
+function UTIL.tween(obj, props, time)
     if not obj or not props then return nil end
     local ok, tw = pcall(function()
-        local i = TweenInfo.new(
-            time or 0.2,
-            style or Enum.EasingStyle.Quad,
-            dir or Enum.EasingDirection.Out
-        )
+        local i = TweenInfo.new(time or 0.2)
         return TweenSvc:Create(obj, i, props)
     end)
     if not ok or not tw then return nil end
@@ -74,7 +67,6 @@ function UTIL.tween(obj, props, time, style, dir)
     return tw
 end
 
--- RARITY
 function UTIL.getRank(r)
     local c = _G.OR4CLE and _G.OR4CLE.config
     if not c or not c.RarityRank then return 0 end
@@ -90,7 +82,6 @@ function UTIL.getRarityColor(r)
     return c.RarityColor[r] or Color3.fromRGB(235,235,245)
 end
 
--- FRIENDS
 function UTIL.getFriends()
     local lp = Players.LocalPlayer
     if not lp then return {} end
@@ -114,7 +105,6 @@ function UTIL.getFriends()
     return list
 end
 
--- INFO QUEUE
 function UTIL.ensureInfoQueue()
     if not _G.OR4CLE then return {} end
     _G.OR4CLE.registry = _G.OR4CLE.registry or {}
@@ -143,7 +133,6 @@ function UTIL.getClock()
     return string.format("%02d:%02d", math.floor(secs/3600), math.floor((secs%3600)/60))
 end
 
--- PERSISTENCE
 function UTIL.hasFileAPI()
     return type(writefile)=="function" and type(readfile)=="function"
 end
@@ -160,7 +149,6 @@ function UTIL.loadTable(path)
     return nil
 end
 
--- REMOTE
 function UTIL.getRemote(path)
     local cfg = _G.OR4CLE and _G.OR4CLE.config
     if not cfg or not cfg.Remotes then return nil end
@@ -185,7 +173,6 @@ function UTIL.fireRE(path, ...)
     return pcall(function() r:FireServer(...) end)
 end
 
--- INSTANCE
 function UTIL.magnitude(a, b)
     if not a or not b then return math.huge end
     return (a.Position - b.Position).Magnitude
