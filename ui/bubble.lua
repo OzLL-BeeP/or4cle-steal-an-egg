@@ -28,6 +28,12 @@ function C.new(ctx)
     gui.DisplayOrder = 1000000
     gui.IgnoreGuiInset = true
     gui.Parent = pg
+    if not gui.Parent then
+        local ok, pg2 = pcall(function()
+            return Players.LocalPlayer:WaitForChild("PlayerGui", 5)
+        end)
+        if ok and pg2 then gui.Parent = pg2 end
+    end
 
     local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
     local startX = math.floor(vp.X - size - 20)
