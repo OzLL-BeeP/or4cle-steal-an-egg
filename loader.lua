@@ -32,7 +32,7 @@ end
 local CONFIG = safeLoad("config.lua")
 if not CONFIG then return end
 
-local UTIL = safeLoad("util.lua")
+local UTIL = safeLoad("core.lua")
 if not UTIL then return end
 
 local OR4CLE = {
