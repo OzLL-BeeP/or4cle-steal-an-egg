@@ -25,15 +25,18 @@ function C.new(ctx)
     local gui = Instance.new("ScreenGui")
     gui.Name = "OR4CLE_Bubble"
     gui.ResetOnSpawn = false
-    gui.DisplayOrder = 99999
+    gui.DisplayOrder = 1000000
     gui.IgnoreGuiInset = true
     gui.Parent = pg
 
-    -- outer glow (logo blured effect pakai ImageLabel transparan besar)
+    local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
+    local startX = math.floor(vp.X - size - 20)
+    local startY = math.floor(vp.Y - size - 120)
+
     local glow = Instance.new("ImageLabel")
     glow.Name = "Glow"
     glow.Size = UDim2.new(0, size + 24, 0, size + 24)
-    glow.Position = UDim2.new(0, 20 - 12, 0, 200 - 12)
+    glow.Position = UDim2.new(0, startX - 12, 0, startY - 12)
     glow.BackgroundTransparency = 1
     glow.Image = (cfg.Assets and cfg.Assets.Logo) or ""
     glow.ImageColor3 = cPurple
@@ -43,11 +46,10 @@ function C.new(ctx)
     glow.Parent = gui
     Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0)
 
-    -- outer ring (halo)
     local ring = Instance.new("Frame")
     ring.Name = "Ring"
     ring.Size = UDim2.new(0, size + 8, 0, size + 8)
-    ring.Position = UDim2.new(0, 20 - 4, 0, 200 - 4)
+    ring.Position = UDim2.new(0, startX - 4, 0, startY - 4)
     ring.BackgroundTransparency = 1
     ring.ZIndex = 1
     ring.Parent = gui
@@ -57,11 +59,10 @@ function C.new(ctx)
     rStroke.Thickness = 1
     rStroke.Transparency = 0.4
 
-    -- main button
     local btn = Instance.new("TextButton")
     btn.Name = "MainBtn"
     btn.Size = UDim2.new(0, size, 0, size)
-    btn.Position = UDim2.new(0, 20, 0, 200)
+    btn.Position = UDim2.new(0, startX, 0, startY)
     btn.BackgroundColor3 = cBg
     btn.BorderSizePixel = 0
     btn.Text = ""
@@ -75,7 +76,6 @@ function C.new(ctx)
     stroke.Color = cPurple
     stroke.Thickness = 2.5
 
-    -- logo
     local logo = Instance.new("ImageLabel")
     logo.Name = "Logo"
     logo.Size = UDim2.new(1, -6, 1, -6)
@@ -87,11 +87,10 @@ function C.new(ctx)
     logo.Parent = btn
     Instance.new("UICorner", logo).CornerRadius = UDim.new(1, 0)
 
-    -- pulse ring animation (subtle)
     local pulse = Instance.new("Frame", gui)
     pulse.Name = "Pulse"
     pulse.Size = UDim2.new(0, size, 0, size)
-    pulse.Position = UDim2.new(0, 20, 0, 200)
+    pulse.Position = UDim2.new(0, startX, 0, startY)
     pulse.BackgroundTransparency = 1
     pulse.ZIndex = 0
     pulse.Parent = gui
@@ -122,7 +121,6 @@ function C.new(ctx)
     self.ring = ring
     self.pulse = pulse
 
-    -- drag dengan snap ke tepi layar
     local dragging, dragStart, startPos, moved
     local SNAP_DIST = 20
 
@@ -140,7 +138,6 @@ function C.new(ctx)
             moved = false
             dragStart = input.Position
             startPos = btn.Position
-            -- scale down saat drag
             Tween:Create(btn, TweenInfo.new(0.12), {Size = UDim2.new(0, size - 4, 0, size - 4)}):Play()
         end
     end)
@@ -150,9 +147,7 @@ function C.new(ctx)
         if input.UserInputType == Enum.UserInputType.MouseMovement
         or input.UserInputType == Enum.UserInputType.Touch then
             local d = input.Position - dragStart
-            if math.abs(d.X) > 4 or math.abs(d.Y) > 4 then
-                moved = true
-            end
+            if math.abs(d.X) > 4 or math.abs(d.Y) > 4 then moved = true end
             local nx = startPos.X.Offset + d.X
             local ny = startPos.Y.Offset + d.Y
             setPos(UDim2.new(0, nx, 0, ny))
@@ -164,24 +159,19 @@ function C.new(ctx)
         or input.UserInputType == Enum.UserInputType.Touch then
             if not dragging then return end
             dragging = false
-
-            -- scale up
             Tween:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, size, 0, size)
             }):Play()
-
-            -- snap ke tepi terdekat
-            local vp = workspace.CurrentCamera.ViewportSize
+            local vp2 = workspace.CurrentCamera.ViewportSize
             local cur = btn.Position
             local x, y = cur.X.Offset, cur.Y.Offset
-            if x < vp.X / 2 - size then
+            if x < vp2.X / 2 - size then
                 if x < SNAP_DIST then x = 20 end
             else
-                if x > vp.X - size - SNAP_DIST then x = vp.X - size - 20 end
+                if x > vp2.X - size - SNAP_DIST then x = vp2.X - size - 20 end
             end
             if y < SNAP_DIST then y = 20 end
-            if y > vp.Y - size - SNAP_DIST then y = vp.Y - size - 40 end
-
+            if y > vp2.Y - size - SNAP_DIST then y = vp2.Y - size - 40 end
             Tween:Create(btn, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Position = UDim2.new(0, x, 0, y)
             }):Play()
@@ -197,19 +187,14 @@ function C.new(ctx)
         end
     end)
 
-    -- klik (bukan drag)
     btn.MouseButton1Click:Connect(function()
         if moved then return end
-        if self.onClick then
-            pcall(self.onClick)
-        end
-        -- feedback
+        if self.onClick then pcall(self.onClick) end
         Tween:Create(btn, TweenInfo.new(0.08), {Size = UDim2.new(0, size - 6, 0, size - 6)}):Play()
         task.wait(0.08)
         Tween:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Back), {Size = UDim2.new(0, size, 0, size)}):Play()
     end)
 
-    -- hotkey
     UIS.InputBegan:Connect(function(input, gpe)
         if gpe then return end
         if input.KeyCode == (UI.ToggleKey or Enum.KeyCode.RightShift) then
@@ -217,7 +202,6 @@ function C.new(ctx)
         end
     end)
 
-    -- hover effect
     btn.MouseEnter:Connect(function()
         Tween:Create(stroke, TweenInfo.new(0.15), {Thickness = 3.5}):Play()
     end)

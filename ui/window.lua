@@ -1,8 +1,7 @@
--- ui/window.lua — modern pro edition
+-- ui/window.lua — modern pro edition v2
 local Players = game:GetService("Players")
 local UIS     = game:GetService("UserInputService")
 local Tween   = game:GetService("TweenService")
-local Run     = game:GetService("RunService")
 
 local C = {}
 C.__index = C
@@ -22,14 +21,12 @@ function C.new(ctx)
     local UI  = cfg.UI or {}
     local pg  = Players.LocalPlayer:WaitForChild("PlayerGui")
 
-    -- responsive
     local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(900, 600)
     local isMobile = vp.X < 700
     local W = math.min((UI.WindowSize and UI.WindowSize.X) or 680, vp.X - (isMobile and 16 or 60))
     local H = math.min((UI.WindowSize and UI.WindowSize.Y) or 460, vp.Y - (isMobile and 40 or 100))
     local SIDEBAR_W = isMobile and 108 or 156
 
-    -- palette
     local cBg       = Color3.fromRGB(10, 10, 16)
     local cSurface  = Color3.fromRGB(18, 18, 26)
     local cSurface2 = Color3.fromRGB(26, 26, 38)
@@ -43,7 +40,6 @@ function C.new(ctx)
     local cSub      = Color3.fromRGB(140, 140, 165)
     local cMuted    = Color3.fromRGB(90, 90, 115)
     local cDanger   = Color3.fromRGB(240, 70, 70)
-    local cSuccess  = Color3.fromRGB(60, 220, 150)
 
     local gui = Instance.new("ScreenGui")
     gui.Name = "OR4CLE_Window"
@@ -53,11 +49,10 @@ function C.new(ctx)
     gui.Enabled = false
     gui.Parent = pg
 
-    -- shadow glow di belakang window
     local shadow = Instance.new("Frame")
     shadow.Name = "Shadow"
     shadow.Size = UDim2.new(0, W + 20, 0, H + 20)
-    shadow.Position = UDim2.new(0.5, -W/2 - 10, 0.5, -H/2 - 10)
+    shadow.Position = UDim2.new(0, 20, 0, 100)
     shadow.BackgroundColor3 = cPurple
     shadow.BackgroundTransparency = 0.85
     shadow.BorderSizePixel = 0
@@ -68,7 +63,7 @@ function C.new(ctx)
     local main = Instance.new("Frame")
     main.Name = "Main"
     main.Size = UDim2.new(0, W, 0, H)
-    main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
+    main.Position = UDim2.new(0, 30, 0, 110)
     main.BackgroundColor3 = cBg
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -81,7 +76,6 @@ function C.new(ctx)
     mainStroke.Thickness = 1.5
     mainStroke.Transparency = 0.2
 
-    -- gradient accent strip di atas
     local strip = Instance.new("Frame")
     strip.Size = UDim2.new(1, 0, 0, 3)
     strip.Position = UDim2.new(0, 0, 0, 0)
@@ -96,7 +90,6 @@ function C.new(ctx)
         ColorSequenceKeypoint.new(1, cCyan),
     }
 
-    -- ═══ TOPBAR ═══
     local top = Instance.new("Frame")
     top.Name = "Topbar"
     top.Size = UDim2.new(1, 0, 0, 48)
@@ -112,7 +105,6 @@ function C.new(ctx)
     topMask.BorderSizePixel = 0
     topMask.ZIndex = 0
 
-    -- logo bulat
     local logoWrap = Instance.new("Frame", top)
     logoWrap.Size = UDim2.new(0, 30, 0, 30)
     logoWrap.Position = UDim2.new(0, 14, 0.5, -15)
@@ -134,7 +126,6 @@ function C.new(ctx)
     topLogo.Parent = logoWrap
     Instance.new("UICorner", topLogo).CornerRadius = UDim.new(1, 0)
 
-    -- title
     local titleBox = Instance.new("Frame", top)
     titleBox.Size = UDim2.new(0, 200, 1, 0)
     titleBox.Position = UDim2.new(0, 54, 0, 0)
@@ -163,7 +154,6 @@ function C.new(ctx)
     subtitle.TextXAlignment = Enum.TextXAlignment.Left
     subtitle.ZIndex = 5
 
-    -- window controls
     local function mkBtn(name, sym, color, xOff, onClick)
         local b = Instance.new("TextButton", top)
         b.Name = name
@@ -196,10 +186,9 @@ function C.new(ctx)
         return b
     end
 
-    local closeBtn = mkBtn("Close", "✕", cDanger, -36, function() gui.Enabled = false end)
-    local minBtn   = mkBtn("Min",   "—", cPurple, -68, function() gui.Enabled = false end)
+    local closeBtn = mkBtn("Close", "X", cDanger, -36, function() gui.Enabled = false end)
+    local minBtn   = mkBtn("Min",   "-", cPurple, -68, function() gui.Enabled = false end)
 
-    -- ═══ SIDEBAR ═══
     local sidebar = Instance.new("Frame", main)
     sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, SIDEBAR_W, 1, -48)
@@ -218,7 +207,6 @@ function C.new(ctx)
     sbList.Padding = UDim.new(0, 4)
     sbList.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ═══ CONTENT ═══
     local contentWrap = Instance.new("Frame", main)
     contentWrap.Name = "ContentWrap"
     contentWrap.Size = UDim2.new(1, -SIDEBAR_W, 1, -48)
@@ -227,7 +215,6 @@ function C.new(ctx)
     contentWrap.BorderSizePixel = 0
     contentWrap.ZIndex = 2
 
-    -- separator kiri
     local sep = Instance.new("Frame", contentWrap)
     sep.Size = UDim2.new(0, 1, 1, -20)
     sep.Position = UDim2.new(0, 0, 0, 10)
@@ -260,7 +247,6 @@ function C.new(ctx)
     self.sidebar = sidebar
     self.content = contentScroll
 
-    -- ═══ TABS ═══
     local tabs = (UI.TabList) or { "Visual", "Farm", "Friends", "Info", "Settings" }
     self.tabButtons = {}
     self.tabPages = {}
@@ -272,15 +258,10 @@ function C.new(ctx)
             local lbl = btn:FindFirstChild("Label")
             local ico = btn:FindFirstChild("Icon")
             local acc = self.tabAccents[n]
-
-            tw(btn, 0.2, {
-                BackgroundColor3 = isActive and cSurface3 or cSurface,
-            })
+            tw(btn, 0.2, {BackgroundColor3 = isActive and cSurface3 or cSurface})
             if lbl then tw(lbl, 0.2, {TextColor3 = isActive and cText or cSub}) end
             if ico then tw(ico, 0.2, {TextColor3 = isActive and cPurple or cMuted}) end
-            if acc then
-                tw(acc, 0.2, {BackgroundTransparency = isActive and 0 or 1})
-            end
+            if acc then tw(acc, 0.2, {BackgroundTransparency = isActive and 0 or 1}) end
         end
         for n, p in pairs(self.tabPages) do
             p.Visible = (n == name)
@@ -302,7 +283,6 @@ function C.new(ctx)
         btn.ZIndex = 3
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
-        -- accent bar kiri
         local acc = Instance.new("Frame", btn)
         acc.Name = "Accent"
         acc.Size = UDim2.new(0, 3, 0, 20)
@@ -318,7 +298,7 @@ function C.new(ctx)
         ico.Size = UDim2.new(0, 30, 1, 0)
         ico.Position = UDim2.new(0, 8, 0, 0)
         ico.BackgroundTransparency = 1
-        ico.Text = TAB_ICON[i] or "·"
+        ico.Text = TAB_ICON[i] or "."
         ico.TextColor3 = cMuted
         ico.Font = Enum.Font.GothamBold
         ico.TextSize = 11
@@ -370,7 +350,6 @@ function C.new(ctx)
 
     selectTab(tabs[1])
 
-    -- ═══ DRAG ═══
     local dragging, dragStart, startPos
     top.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -397,21 +376,29 @@ function C.new(ctx)
         end
     end)
 
-    -- ═══ API ═══
     function self:show()
         gui.Enabled = true
-        main.Size = UDim2.new(0, W, 0, H)
-        main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
-        shadow.Size = UDim2.new(0, W + 20, 0, H + 20)
-        shadow.Position = UDim2.new(0.5, -W/2 - 10, 0.5, -H/2 - 10)
-        main.BackgroundTransparency = 1
-        tw(main, 0.25, {BackgroundTransparency = 0})
+        -- center pakai viewport aktual
+        local vpNow = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(900, 600)
+        local curW = math.min((UI.WindowSize and UI.WindowSize.X) or 680, vpNow.X - 16)
+        local curH = math.min((UI.WindowSize and UI.WindowSize.Y) or 460, vpNow.Y - 40)
+        local px = math.floor((vpNow.X - curW) / 2)
+        local py = math.floor((vpNow.Y - curH) / 2)
+        if px < 0 then px = 0 end
+        if py < 0 then py = 0 end
+        main.Size = UDim2.new(0, curW, 0, curH)
+        main.Position = UDim2.new(0, px, 0, py)
+        shadow.Size = UDim2.new(0, curW + 20, 0, curH + 20)
+        shadow.Position = UDim2.new(0, px - 10, 0, py - 10)
     end
     function self:hide() gui.Enabled = false end
     function self:toggle() if gui.Enabled then self:hide() else self:show() end end
     function self:isOpen() return gui.Enabled end
     function self:getPage(name) return self.tabPages[name] end
     function self:selectTab(n) selectTab(n) end
+
+    self:show()
+    gui.Enabled = false
 
     return self
 end
