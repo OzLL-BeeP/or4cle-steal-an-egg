@@ -186,8 +186,21 @@ function C.new(ctx)
         return b
     end
 
-    local closeBtn = mkBtn("Close", "X", cDanger, -36, function() gui.Enabled = false end)
-    local minBtn   = mkBtn("Min",   "-", cPurple, -68, function() gui.Enabled = false end)
+    local closeBtn = mkBtn("Close", "X", cDanger, -36, function()
+        -- hapus semua GUI OR4CLE (window + bubble) + debug panels
+        local pgAll = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+        for _, x in ipairs(pgAll:GetChildren()) do
+            if x:IsA("ScreenGui") then
+                if x.Name:find("OR4CLE") or x.Name == "BubbleCheck" or x.Name == "DeepDebug" or x.Name == "PagesDebug" or x.Name == "LineDebug" or x.Name == "IsolateTest" or x.Name == "UtilTest" or x.Name == "BubbleTest" then
+                    x:Destroy()
+                end
+            end
+        end
+    end)
+    local minBtn   = mkBtn("Min",   "-", cPurple, -68, function()
+        -- cuma hide window, bubble tetep
+        gui.Enabled = false
+    end)
 
     local sidebar = Instance.new("Frame", main)
     sidebar.Name = "Sidebar"
