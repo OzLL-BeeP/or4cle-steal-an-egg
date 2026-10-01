@@ -1,6 +1,5 @@
--- ui/bubble.lua — bubble + drag + klik pakai TextButton
+-- ui/bubble.lua — minimal reliable
 local Players = game:GetService("Players")
-local UIS     = game:GetService("UserInputService")
 
 local C = {}
 C.__index = C
@@ -8,7 +7,7 @@ C.__index = C
 function C.new(ctx)
     local self = setmetatable({}, C)
     self.ctx = ctx
-    self.cfg = ctx.config
+    self.cfg = ctx.config or {}
     self.open = false
 
     local T  = self.cfg.Theme or {}
@@ -16,116 +15,52 @@ function C.new(ctx)
     local pg = Players.LocalPlayer:WaitForChild("PlayerGui")
 
     local size = UI.BubbleSize or 56
-    local outline = UI.BubbleOutline or 3
 
     local gui = Instance.new("ScreenGui")
     gui.Name = "OR4CLE_Bubble"
     gui.ResetOnSpawn = false
-    gui.DisplayOrder = 9999
+    gui.DisplayOrder = 100000
     gui.IgnoreGuiInset = true
     gui.Parent = pg
 
-    -- glow
-    local glow = Instance.new("ImageLabel")
-    glow.Name = "Glow"
-    glow.Size = UDim2.new(0, size + 16, 0, size + 16)
-    glow.Position = UDim2.new(0, 20 - 8, 0, 200 - 8)
-    glow.BackgroundTransparency = 1
-    glow.Image = self.cfg.Assets and self.cfg.Assets.Logo or ""
-    glow.ImageColor3 = (UI.BubbleGlowColor or T.PurpleGlow or Color3.fromRGB(168,85,247))
-    glow.ImageTransparency = 0.55
-    glow.ScaleType = Enum.ScaleType.Crop
-    glow.ZIndex = 1
-    glow.Parent = gui
-    Instance.new("UICorner", glow).CornerRadius = UDim.new(1, 0)
-
-    -- tombol utama — full TextButton
+    -- tombol utama
     local btn = Instance.new("TextButton")
     btn.Name = "MainBtn"
     btn.Size = UDim2.new(0, size, 0, size)
     btn.Position = UDim2.new(0, 20, 0, 200)
-    btn.BackgroundColor3 = T.Background or Color3.fromRGB(12,12,18)
+    btn.BackgroundColor3 = Color3.fromRGB(12,12,18)
     btn.BorderSizePixel = 0
     btn.Text = ""
     btn.AutoButtonColor = false
-    btn.ZIndex = 2
     btn.Active = true
+    btn.ZIndex = 999
     btn.Parent = gui
     Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
 
     local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = UI.BubbleOutlineColor or T.Purple or Color3.fromRGB(138,92,246)
-    stroke.Thickness = outline
+    stroke.Color = Color3.fromRGB(138,92,246)
+    stroke.Thickness = 3
 
-    -- logo di dalam tombol
+    -- logo
     local logo = Instance.new("ImageLabel")
     logo.Name = "Logo"
-    logo.Size = UDim2.new(1, -outline * 2, 1, -outline * 2)
-    logo.Position = UDim2.new(0, outline, 0, outline)
+    logo.Size = UDim2.new(1, -6, 1, -6)
+    logo.Position = UDim2.new(0, 3, 0, 3)
     logo.BackgroundTransparency = 1
-    logo.Image = self.cfg.Assets and self.cfg.Assets.Logo or ""
+    logo.Image = (self.cfg.Assets and self.cfg.Assets.Logo) or ""
     logo.ScaleType = Enum.ScaleType.Crop
-    logo.ZIndex = 3
+    logo.ZIndex = 1000
     logo.Parent = btn
     Instance.new("UICorner", logo).CornerRadius = UDim.new(1, 0)
 
     self.gui = gui
     self.btn = btn
-    self.glow = glow
 
-    -- DRAG pakai TextButton
-    local dragging, dragStart, startPos, moved
-    btn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            moved = false
-            dragStart = input.Position
-            startPos = btn.Position
-        end
-    end)
-    btn.InputChanged:Connect(function(input)
-        if not dragging then return end
-        if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
-            local d = input.Position - dragStart
-            if math.abs(d.X) > 3 or math.abs(d.Y) > 3 then
-                moved = true
-            end
-            btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X,
-                                     startPos.Y.Scale, startPos.Y.Offset + d.Y)
-            glow.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X - 8,
-                                      startPos.Y.Scale, startPos.Y.Offset + d.Y - 8)
-        end
-    end)
-    UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-
-    -- KLIK pakai Activated (paling reliable di executor)
-    btn.Activated:Connect(function()
-        if moved then return end
-        if self.onClick then
-            pcall(self.onClick)
-        end
-    end)
-
-    -- fallback pakai MouseButton1Click
+    -- KLIK — simple, no drag detect
     btn.MouseButton1Click:Connect(function()
-        if moved then return end
         if self.onClick then
-            pcall(self.onClick)
-        end
-    end)
-
-    -- hotkey RightShift
-    UIS.InputBegan:Connect(function(input, gpe)
-        if gpe then return end
-        if input.KeyCode == (UI.ToggleKey or Enum.KeyCode.RightShift) then
-            if self.onClick then pcall(self.onClick) end
+            local ok, err = pcall(self.onClick)
+            if not ok then warn("[OR4CLE] onClick err: "..tostring(err)) end
         end
     end)
 
