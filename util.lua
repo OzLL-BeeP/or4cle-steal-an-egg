@@ -1,6 +1,5 @@
--- OR4CLE — util.lua (no os.*)
+-- OR4CLE — util.lua (fixed)
 local Players  = game:GetService("Players")
-local RunSvc   = game:GetService("RunService")
 local TweenSvc = game:GetService("TweenService")
 local HttpSvc  = game:GetService("HttpService")
 
@@ -38,10 +37,9 @@ end
 
 -- NOTIFY
 function UTIL.notify(text, dur)
-    dur = dur or 3
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "OR4CLE", Text = tostring(text), Duration = dur,
+            Title = "OR4CLE", Text = tostring(text), Duration = dur or 3,
         })
     end)
 end
@@ -60,12 +58,19 @@ function UTIL.deepCopy(t)
     return o
 end
 
--- TWEEN
+-- TWEEN (safe)
 function UTIL.tween(obj, props, time, style, dir)
-    if not obj then return end
-    local i = TweenInfo.new(time or 0.2, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out)
-    local tw = TweenSvc:Create(obj, i, props)
-    tw:Play()
+    if not obj or not props then return nil end
+    local ok, tw = pcall(function()
+        local i = TweenInfo.new(
+            time or 0.2,
+            style or Enum.EasingStyle.Quad,
+            dir or Enum.EasingDirection.Out
+        )
+        return TweenSvc:Create(obj, i, props)
+    end)
+    if not ok or not tw then return nil end
+    pcall(function() tw:Play() end)
     return tw
 end
 
@@ -121,7 +126,7 @@ function UTIL.pushInfo(e)
     local c = _G.OR4CLE and _G.OR4CLE.config
     local max = (c and c.Info and c.Info.MaxSlots) or 10
     e = e or {}
-    e.timestamp = e.timestamp or (tick and tick() or 0)
+    e.timestamp = e.timestamp or (type(tick)=="function" and tick() or 0)
     e.expired = false
     table.insert(q, 1, e)
     while #q > max do table.remove(q, #q) end
@@ -131,42 +136,31 @@ function UTIL.clearInfo()
     local q = UTIL.ensureInfoQueue()
     for i = #q, 1, -1 do q[i] = nil end
 end
-
--- CLOCK — hitung dari tick() mod 86400
 function UTIL.getClock()
     local t = 0
-    if type(tick) == "function" then
-        pcall(function() t = tick() end)
-    end
+    if type(tick) == "function" then pcall(function() t = tick() end) end
     local secs = math.floor(t) % 86400
-    local h = math.floor(secs / 3600)
-    local mn = math.floor((secs % 3600) / 60)
-    return string.format("%02d:%02d", h, mn)
+    return string.format("%02d:%02d", math.floor(secs/3600), math.floor((secs%3600)/60))
 end
 
 -- PERSISTENCE
 function UTIL.hasFileAPI()
-    return typeof(writefile) == "function" and typeof(readfile) == "function"
+    return type(writefile)=="function" and type(readfile)=="function"
 end
 function UTIL.saveTable(path, tbl)
     if not UTIL.hasFileAPI() then return false end
-    local ok = pcall(function()
-        writefile(path, HttpSvc:JSONEncode(tbl))
-    end)
-    return ok
+    return pcall(function() writefile(path, HttpSvc:JSONEncode(tbl)) end)
 end
 function UTIL.loadTable(path)
     if not UTIL.hasFileAPI() then return nil end
     local ok, data = pcall(function()
-        if isfile and isfile(path) then
-            return HttpSvc:JSONDecode(readfile(path))
-        end
+        if isfile and isfile(path) then return HttpSvc:JSONDecode(readfile(path)) end
     end)
     if ok then return data end
     return nil
 end
 
--- REMOTE HELPERS
+-- REMOTE
 function UTIL.getRemote(path)
     local cfg = _G.OR4CLE and _G.OR4CLE.config
     if not cfg or not cfg.Remotes then return nil end
