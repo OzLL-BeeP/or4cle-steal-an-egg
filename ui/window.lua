@@ -293,12 +293,28 @@ function C.new(ctx)
     end)
     mini.MouseButton1Click:Connect(function() gui.Enabled = false end)
 
-    function self:show() gui.Enabled = true end
+    function self:show()
+        gui.Enabled = true
+        -- paksa center pakai AbsoluteSize (akurat)
+        task.defer(function()
+            local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
+            local as = main.AbsoluteSize
+            if as.X > 0 and as.Y > 0 then
+                local px = math.floor((vp.X - as.X) / 2)
+                local py = math.floor((vp.Y - as.Y) / 2)
+                if py < 50 then py = 50 end
+                main.Position = UDim2.new(0, px, 0, py)
+            end
+        end)
+    end
     function self:hide() gui.Enabled = false end
     function self:toggle() gui.Enabled = not gui.Enabled end
     function self:isOpen() return gui.Enabled end
     function self:getPage(name) return self.tabPages[name] end
     function self:selectTab(n) selectTab(n) end
+
+    self:show()
+    gui.Enabled = false
 
     return self
 end
