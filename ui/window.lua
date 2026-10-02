@@ -1,4 +1,4 @@
--- ui/window.lua — explicit pixel size, no relative
+-- ui/window.lua — pattern isolate (jalan terbukti)
 local Players = game:GetService("Players")
 local UIS     = game:GetService("UserInputService")
 
@@ -14,19 +14,14 @@ function C.new(ctx)
 
     local lp = Players.LocalPlayer
     if not lp then return self end
-    local pg = lp:FindFirstChild("PlayerGui") or lp:WaitForChild("PlayerGui", 10)
+    local pg = lp:WaitForChild("PlayerGui", 10)
     if not pg then return self end
 
     local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
     local W = math.min((UI.WindowSize and UI.WindowSize.X) or 640, vp.X - 20)
     local H = math.min((UI.WindowSize and UI.WindowSize.Y) or 440, vp.Y - 40)
-
     local SIDEBAR_W = 130
     local TOPBAR_H = 44
-
-    -- area konten: W - SIDEBAR_W (lebar), H - TOPBAR_H (tinggi)
-    local CONTENT_W = W - SIDEBAR_W
-    local CONTENT_H = H - TOPBAR_H
 
     local cBg = T.Background or Color3.fromRGB(11, 11, 17)
     local cSurface = T.Surface or Color3.fromRGB(20, 20, 28)
@@ -46,31 +41,29 @@ function C.new(ctx)
     gui.Enabled = false
     gui.Parent = pg
 
-    if not gui.Parent then
-        gui.Parent = pg
-    end
-
+    -- MAIN — absolute size, NO ClipsDescendants
     local main = Instance.new("Frame")
     main.Name = "Main"
     main.Size = UDim2.new(0, W, 0, H)
     main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
     main.BackgroundColor3 = cBg
     main.BorderSizePixel = 0
-    main.ClipsDescendants = true
+    main.ClipsDescendants = false
+    main.ZIndex = 1
     main.Parent = gui
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
     local st = Instance.new("UIStroke", main)
     st.Color = cBorder
     st.Thickness = 1.5
 
-    -- TOPBAR
+    -- TOPBAR — absolute
     local top = Instance.new("Frame")
     top.Name = "Topbar"
     top.Size = UDim2.new(0, W, 0, TOPBAR_H)
     top.Position = UDim2.new(0, 0, 0, 0)
     top.BackgroundColor3 = cSurface
     top.BorderSizePixel = 0
-    top.ZIndex = 4
+    top.ZIndex = 10
     top.Parent = main
     Instance.new("UICorner", top).CornerRadius = UDim.new(0, 14)
     local topMask = Instance.new("Frame")
@@ -78,16 +71,16 @@ function C.new(ctx)
     topMask.Position = UDim2.new(0, 0, 0, TOPBAR_H - 14)
     topMask.BackgroundColor3 = cSurface
     topMask.BorderSizePixel = 0
-    topMask.ZIndex = 0
+    topMask.ZIndex = 10
     topMask.Parent = top
 
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
-    logo.Position = UDim2.new(0, 12, 0, (TOPBAR_H - 28) / 2)
+    logo.Position = UDim2.new(0, 12, 0, 8)
     logo.BackgroundTransparency = 1
     logo.Image = (cfg.Assets and cfg.Assets.Logo) or ""
     logo.ScaleType = Enum.ScaleType.Crop
-    logo.ZIndex = 5
+    logo.ZIndex = 11
     logo.Parent = top
     Instance.new("UICorner", logo).CornerRadius = UDim.new(1, 0)
 
@@ -100,7 +93,7 @@ function C.new(ctx)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 15
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.ZIndex = 5
+    title.ZIndex = 11
     title.Parent = top
 
     local sub = Instance.new("TextLabel")
@@ -112,43 +105,43 @@ function C.new(ctx)
     sub.Font = Enum.Font.Gotham
     sub.TextSize = 10
     sub.TextXAlignment = Enum.TextXAlignment.Left
-    sub.ZIndex = 5
+    sub.ZIndex = 11
     sub.Parent = top
 
     local close = Instance.new("TextButton")
     close.Size = UDim2.new(0, 26, 0, 26)
-    close.Position = UDim2.new(0, W - 34, 0, (TOPBAR_H - 26) / 2)
+    close.Position = UDim2.new(0, W - 34, 0, 9)
     close.BackgroundColor3 = cDanger
     close.Text = "X"
     close.TextColor3 = Color3.fromRGB(255, 255, 255)
     close.Font = Enum.Font.GothamBold
     close.TextSize = 13
     close.BorderSizePixel = 0
-    close.ZIndex = 5
+    close.ZIndex = 11
     close.Parent = top
     Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
 
     local mini = Instance.new("TextButton")
     mini.Size = UDim2.new(0, 26, 0, 26)
-    mini.Position = UDim2.new(0, W - 64, 0, (TOPBAR_H - 26) / 2)
+    mini.Position = UDim2.new(0, W - 64, 0, 9)
     mini.BackgroundColor3 = cSurface2
     mini.Text = "-"
     mini.TextColor3 = cText
     mini.Font = Enum.Font.GothamBold
     mini.TextSize = 14
     mini.BorderSizePixel = 0
-    mini.ZIndex = 5
+    mini.ZIndex = 11
     mini.Parent = top
     Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 6)
 
-    -- SIDEBAR — explicit pixel
+    -- SIDEBAR — absolute
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, SIDEBAR_W, 0, CONTENT_H)
+    sidebar.Size = UDim2.new(0, SIDEBAR_W, 0, H - TOPBAR_H)
     sidebar.Position = UDim2.new(0, 0, 0, TOPBAR_H)
     sidebar.BackgroundColor3 = cSurface
     sidebar.BorderSizePixel = 0
-    sidebar.ZIndex = 2
+    sidebar.ZIndex = 5
     sidebar.Parent = main
     local sbList = Instance.new("UIListLayout")
     sbList.Padding = UDim.new(0, 4)
@@ -160,20 +153,20 @@ function C.new(ctx)
     sbPad.PaddingRight = UDim.new(0, 8)
     sbPad.Parent = sidebar
 
-    -- CONTENT WRAP — explicit pixel
-    local contentWrap = Instance.new("Frame")
-    contentWrap.Name = "ContentWrap"
-    contentWrap.Size = UDim2.new(0, CONTENT_W, 0, CONTENT_H)
-    contentWrap.Position = UDim2.new(0, SIDEBAR_W, 0, TOPBAR_H)
-    contentWrap.BackgroundColor3 = cBg
-    contentWrap.BorderSizePixel = 0
-    contentWrap.ZIndex = 2
-    contentWrap.Parent = main
+    -- CONTENT AREA — pakai Frame biasa, bukan ScrollingFrame
+    local contentArea = Instance.new("Frame")
+    contentArea.Name = "ContentArea"
+    contentArea.Size = UDim2.new(0, W - SIDEBAR_W, 0, H - TOPBAR_H)
+    contentArea.Position = UDim2.new(0, SIDEBAR_W, 0, TOPBAR_H)
+    contentArea.BackgroundColor3 = cBg
+    contentArea.BorderSizePixel = 0
+    contentArea.ZIndex = 5
+    contentArea.Parent = main
 
-    -- CONTENT SCROLL — explicit pixel (kurangi padding 16)
+    -- CONTENT SCROLL — absolute
     local contentScroll = Instance.new("ScrollingFrame")
     contentScroll.Name = "Content"
-    contentScroll.Size = UDim2.new(0, CONTENT_W - 16, 0, CONTENT_H - 16)
+    contentScroll.Size = UDim2.new(0, W - SIDEBAR_W - 16, 0, H - TOPBAR_H - 16)
     contentScroll.Position = UDim2.new(0, 8, 0, 8)
     contentScroll.BackgroundTransparency = 1
     contentScroll.BorderSizePixel = 0
@@ -181,9 +174,8 @@ function C.new(ctx)
     contentScroll.ScrollBarImageColor3 = cPurple
     contentScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     contentScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    contentScroll.ClipsDescendants = true
-    contentScroll.ZIndex = 3
-    contentScroll.Parent = contentWrap
+    contentScroll.ZIndex = 6
+    contentScroll.Parent = contentArea
     local csList = Instance.new("UIListLayout")
     csList.Padding = UDim.new(0, 10)
     csList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -221,13 +213,13 @@ function C.new(ctx)
         btn.AutoButtonColor = false
         btn.BorderSizePixel = 0
         btn.LayoutOrder = i
-        btn.ZIndex = 3
+        btn.ZIndex = 6
         btn.Parent = sidebar
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
         local lbl = Instance.new("TextLabel")
         lbl.Name = "Label"
-        lbl.Size = UDim2.new(0, SIDEBAR_W - 30, 1, 0)
+        lbl.Size = UDim2.new(1, -16, 1, 0)
         lbl.Position = UDim2.new(0, 14, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = string.format("%02d  %s", i, name)
@@ -235,16 +227,16 @@ function C.new(ctx)
         lbl.Font = Enum.Font.Gotham
         lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.ZIndex = 4
+        lbl.ZIndex = 7
         lbl.Parent = btn
 
-        -- PAGE — explicit pixel width
+        -- PAGE — absolute size
         local page = Instance.new("Frame")
         page.Name = name.."Page"
-        page.Size = UDim2.new(0, CONTENT_W - 16, 0, 200)
+        page.Size = UDim2.new(0, W - SIDEBAR_W - 16, 0, 300)
         page.BackgroundTransparency = 1
         page.Visible = false
-        page.ZIndex = 3
+        page.ZIndex = 6
         page.Parent = contentScroll
         local pl = Instance.new("UIListLayout")
         pl.Padding = UDim.new(0, 10)
@@ -259,6 +251,7 @@ function C.new(ctx)
 
     selectTab(tabs[1])
 
+    -- DRAG
     local dragging, dragStart, startPos
     top.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1
@@ -291,19 +284,7 @@ function C.new(ctx)
     end)
     mini.MouseButton1Click:Connect(function() gui.Enabled = false end)
 
-    function self:show()
-        gui.Enabled = true
-        main.Size = UDim2.new(0, W, 0, H)
-        main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
-        task.defer(function()
-            local mainSize = main.AbsoluteSize
-            if mainSize.X > 0 and mainSize.Y > 0 then
-                contentWrap.Size = UDim2.new(0, mainSize.X - SIDEBAR_W, 0, mainSize.Y - TOPBAR_H)
-                contentScroll.Size = UDim2.new(0, mainSize.X - SIDEBAR_W - 16, 0, mainSize.Y - TOPBAR_H - 16)
-                contentScroll.CanvasPosition = Vector2.new(0, 0)
-            end
-        end)
-    end
+    function self:show() gui.Enabled = true end
     function self:hide() gui.Enabled = false end
     function self:toggle() gui.Enabled = not gui.Enabled end
     function self:isOpen() return gui.Enabled end
