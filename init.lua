@@ -35,10 +35,13 @@ local cMuted     = Color3.fromRGB(62, 65, 82)
 local cLine      = Color3.fromRGB(32, 34, 50)
 
 local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
-local W = math.min(580, vp.X - 20)
-local H = math.min(420, vp.Y - 30)
 local SIDEBAR_W = 148
 local TOPBAR_H = 52
+-- clamp: max 580x420, tapi kalo viewport kecil sesuaikan
+local W = math.min(580, vp.X - 40)
+local H = math.min(420, vp.Y - 120)  -- reservasi 120px buat topbar + offset
+if H < 260 then H = vp.Y - 40 end     -- darurat
+if W < 400 then W = vp.X - 20 end
 
 -- ═══════════════════════════════════════
 -- WINDOW
