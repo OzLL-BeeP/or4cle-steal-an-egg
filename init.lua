@@ -931,14 +931,17 @@ end)
 -- recenter
 task.defer(function()
     local vp2 = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
-    local as = main.AbsoluteSize
-    if as.X > 0 then
-        local px = math.max(4, math.floor((vp2.X - as.X) / 2))
-        local py = math.max(30, math.floor((vp2.Y - as.Y) / 2))
-        main.Position = UDim2.new(0, px, 0, py)
-        glow.Position = UDim2.new(0, px - 16, 0, py - 16)
-        shadow.Position = UDim2.new(0, px - 4, 0, py + 6)
-    end
+    -- clamp window size ke viewport
+    local fitW = math.min(W, vp2.X - 20)
+    local fitH = math.min(H, vp2.Y - 40)
+    if fitH < 200 then fitH = vp2.Y - 20 end
+    main.Size = UDim2.new(0, fitW, 0, fitH)
+    task.wait(0.1)
+    local px = math.max(10, math.floor((vp2.X - fitW) / 2))
+    local py = math.max(40, math.floor((vp2.Y - fitH) / 2) + 10)
+    main.Position = UDim2.new(0, px, 0, py)
+    glow.Position = UDim2.new(0, px - 16, 0, py - 16)
+    shadow.Position = UDim2.new(0, px - 4, 0, py + 6)
 end)
 
 _G.OR4CLE = _G.OR4CLE or {}
