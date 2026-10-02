@@ -439,6 +439,22 @@ function C.new(ctx, window)
         end)
     end
 
+    -- paksa semua page visible ke default
+    task.defer(function()
+        for name, page in pairs(self.win.tabPages or {}) do
+            page.Visible = false
+        end
+        -- aktifkan tab pertama
+        local firstTab = (self.cfg.UI and self.cfg.UI.TabList and self.cfg.UI.TabList[1]) or "Visual"
+        if self.win.selectTab then
+            self.win:selectTab(firstTab)
+        end
+        local firstPage = self.win.tabPages and self.win.tabPages[firstTab]
+        if firstPage then
+            firstPage.Visible = true
+        end
+    end)
+
     return self
 end
 
