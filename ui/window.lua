@@ -197,7 +197,7 @@ function C.new(ctx)
         lbl.Text = string.upper(name)
         lbl.TextColor3 = cSub
         lbl.Font = Enum.Font.GothamMedium
-        lbl.TextSize = 12
+        lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.ZIndex = 7
 
