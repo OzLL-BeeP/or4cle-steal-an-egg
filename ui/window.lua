@@ -295,6 +295,14 @@ function C.new(ctx)
         gui.Enabled = true
         main.Size = UDim2.new(0, W, 0, H)
         main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
+        task.defer(function()
+            local mainSize = main.AbsoluteSize
+            if mainSize.X > 0 and mainSize.Y > 0 then
+                contentWrap.Size = UDim2.new(0, mainSize.X - SIDEBAR_W, 0, mainSize.Y - TOPBAR_H)
+                contentScroll.Size = UDim2.new(0, mainSize.X - SIDEBAR_W - 16, 0, mainSize.Y - TOPBAR_H - 16)
+                contentScroll.CanvasPosition = Vector2.new(0, 0)
+            end
+        end)
     end
     function self:hide() gui.Enabled = false end
     function self:toggle() gui.Enabled = not gui.Enabled end
