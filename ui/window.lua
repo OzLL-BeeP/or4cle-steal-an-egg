@@ -1,21 +1,9 @@
--- ui/window.lua — bulletproof parent chain
+-- ui/window.lua — explicit pixel size, no relative
 local Players = game:GetService("Players")
 local UIS     = game:GetService("UserInputService")
 
 local C = {}
 C.__index = C
-
--- helper: parent yang retry sampai berhasil
-local function safeParent(inst, parent)
-    inst.Parent = parent
-    if inst.Parent == parent then return true end
-    task.defer(function()
-        if inst.Parent ~= parent then
-            inst.Parent = parent
-        end
-    end)
-    return inst.Parent == parent
-end
 
 function C.new(ctx)
     local self = setmetatable({}, C)
@@ -25,25 +13,20 @@ function C.new(ctx)
     local UI = cfg.UI or {}
 
     local lp = Players.LocalPlayer
-    if not lp then
-        warn("[OR4CLE window] LocalPlayer nil")
-        return self
-    end
-
-    -- 1. dapatkan PlayerGui yang valid dulu
-    local pg = lp:FindFirstChild("PlayerGui")
-    if not pg then
-        pg = lp:WaitForChild("PlayerGui", 10)
-    end
-    if not pg then
-        warn("[OR4CLE window] PlayerGui gak ada")
-        return self
-    end
+    if not lp then return self end
+    local pg = lp:FindFirstChild("PlayerGui") or lp:WaitForChild("PlayerGui", 10)
+    if not pg then return self end
 
     local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800, 600)
     local W = math.min((UI.WindowSize and UI.WindowSize.X) or 640, vp.X - 20)
     local H = math.min((UI.WindowSize and UI.WindowSize.Y) or 440, vp.Y - 40)
+
     local SIDEBAR_W = 130
+    local TOPBAR_H = 44
+
+    -- area konten: W - SIDEBAR_W (lebar), H - TOPBAR_H (tinggi)
+    local CONTENT_W = W - SIDEBAR_W
+    local CONTENT_H = H - TOPBAR_H
 
     local cBg = T.Background or Color3.fromRGB(11, 11, 17)
     local cSurface = T.Surface or Color3.fromRGB(20, 20, 28)
@@ -55,31 +38,22 @@ function C.new(ctx)
     local cSub = Color3.fromRGB(145, 145, 170)
     local cDanger = Color3.fromRGB(245, 75, 75)
 
-    -- 2. bikin ScreenGui tanpa parent dulu
     local gui = Instance.new("ScreenGui")
     gui.Name = "OR4CLE_Window"
     gui.ResetOnSpawn = false
     gui.DisplayOrder = 99998
     gui.IgnoreGuiInset = true
     gui.Enabled = false
+    gui.Parent = pg
 
-    -- 3. parent ke PlayerGui + verify
-    safeParent(gui, pg)
-    if gui.Parent ~= pg then
-        -- retry langsung
+    if not gui.Parent then
         gui.Parent = pg
     end
-    if not gui.Parent then
-        warn("[OR4CLE window] gagal parent ScreenGui")
-        return self
-    end
 
-    -- 4. baru bikin anak-anak
     local main = Instance.new("Frame")
     main.Name = "Main"
     main.Size = UDim2.new(0, W, 0, H)
     main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
-    main.ClipsDescendants = true
     main.BackgroundColor3 = cBg
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -89,33 +63,37 @@ function C.new(ctx)
     st.Color = cBorder
     st.Thickness = 1.5
 
-    -- topbar
-    local top = Instance.new("Frame", main)
+    -- TOPBAR
+    local top = Instance.new("Frame")
     top.Name = "Topbar"
-    top.Size = UDim2.new(1, 0, 0, 44)
+    top.Size = UDim2.new(0, W, 0, TOPBAR_H)
+    top.Position = UDim2.new(0, 0, 0, 0)
     top.BackgroundColor3 = cSurface
     top.BorderSizePixel = 0
     top.ZIndex = 4
+    top.Parent = main
     Instance.new("UICorner", top).CornerRadius = UDim.new(0, 14)
-    local topMask = Instance.new("Frame", top)
-    topMask.Size = UDim2.new(1, 0, 0, 14)
-    topMask.Position = UDim2.new(0, 0, 1, -14)
+    local topMask = Instance.new("Frame")
+    topMask.Size = UDim2.new(0, W, 0, 14)
+    topMask.Position = UDim2.new(0, 0, 0, TOPBAR_H - 14)
     topMask.BackgroundColor3 = cSurface
     topMask.BorderSizePixel = 0
     topMask.ZIndex = 0
+    topMask.Parent = top
 
-    local logo = Instance.new("ImageLabel", top)
+    local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 28, 0, 28)
-    logo.Position = UDim2.new(0, 12, 0.5, -14)
+    logo.Position = UDim2.new(0, 12, 0, (TOPBAR_H - 28) / 2)
     logo.BackgroundTransparency = 1
     logo.Image = (cfg.Assets and cfg.Assets.Logo) or ""
     logo.ScaleType = Enum.ScaleType.Crop
     logo.ZIndex = 5
+    logo.Parent = top
     Instance.new("UICorner", logo).CornerRadius = UDim.new(1, 0)
 
-    local title = Instance.new("TextLabel", top)
-    title.Size = UDim2.new(1, -140, 0, 20)
-    title.Position = UDim2.new(0, 50, 0, 8)
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0, 200, 0, 20)
+    title.Position = UDim2.new(0, 50, 0, 6)
     title.BackgroundTransparency = 1
     title.Text = "OR4CLE"
     title.TextColor3 = cText
@@ -123,9 +101,10 @@ function C.new(ctx)
     title.TextSize = 15
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.ZIndex = 5
+    title.Parent = top
 
-    local sub = Instance.new("TextLabel", top)
-    sub.Size = UDim2.new(1, -140, 0, 14)
+    local sub = Instance.new("TextLabel")
+    sub.Size = UDim2.new(0, 200, 0, 14)
     sub.Position = UDim2.new(0, 50, 0, 26)
     sub.BackgroundTransparency = 1
     sub.Text = "Steal An Egg v"..(cfg.VERSION or "?")
@@ -134,22 +113,24 @@ function C.new(ctx)
     sub.TextSize = 10
     sub.TextXAlignment = Enum.TextXAlignment.Left
     sub.ZIndex = 5
+    sub.Parent = top
 
-    local close = Instance.new("TextButton", top)
+    local close = Instance.new("TextButton")
     close.Size = UDim2.new(0, 26, 0, 26)
-    close.Position = UDim2.new(1, -34, 0.5, -13)
+    close.Position = UDim2.new(0, W - 34, 0, (TOPBAR_H - 26) / 2)
     close.BackgroundColor3 = cDanger
     close.Text = "X"
-    close.TextColor3 = Color3.fromRGB(255,255,255)
+    close.TextColor3 = Color3.fromRGB(255, 255, 255)
     close.Font = Enum.Font.GothamBold
     close.TextSize = 13
     close.BorderSizePixel = 0
     close.ZIndex = 5
+    close.Parent = top
     Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
 
-    local mini = Instance.new("TextButton", top)
+    local mini = Instance.new("TextButton")
     mini.Size = UDim2.new(0, 26, 0, 26)
-    mini.Position = UDim2.new(1, -64, 0.5, -13)
+    mini.Position = UDim2.new(0, W - 64, 0, (TOPBAR_H - 26) / 2)
     mini.BackgroundColor3 = cSurface2
     mini.Text = "-"
     mini.TextColor3 = cText
@@ -157,33 +138,42 @@ function C.new(ctx)
     mini.TextSize = 14
     mini.BorderSizePixel = 0
     mini.ZIndex = 5
+    mini.Parent = top
     Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 6)
 
-    local sidebar = Instance.new("Frame", main)
+    -- SIDEBAR — explicit pixel
+    local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, SIDEBAR_W, 1, -44)
-    sidebar.Position = UDim2.new(0, 0, 0, 44)
+    sidebar.Size = UDim2.new(0, SIDEBAR_W, 0, CONTENT_H)
+    sidebar.Position = UDim2.new(0, 0, 0, TOPBAR_H)
     sidebar.BackgroundColor3 = cSurface
     sidebar.BorderSizePixel = 0
     sidebar.ZIndex = 2
-    local sbList = Instance.new("UIListLayout", sidebar)
+    sidebar.Parent = main
+    local sbList = Instance.new("UIListLayout")
     sbList.Padding = UDim.new(0, 4)
     sbList.SortOrder = Enum.SortOrder.LayoutOrder
-    local sbPad = Instance.new("UIPadding", sidebar)
+    sbList.Parent = sidebar
+    local sbPad = Instance.new("UIPadding")
     sbPad.PaddingTop = UDim.new(0, 8)
     sbPad.PaddingLeft = UDim.new(0, 8)
     sbPad.PaddingRight = UDim.new(0, 8)
+    sbPad.Parent = sidebar
 
-    local contentWrap = Instance.new("Frame", main)
-    contentWrap.Size = UDim2.new(0, W - SIDEBAR_W, 0, H - 44)
-    contentWrap.Position = UDim2.new(0, SIDEBAR_W, 0, 44)
+    -- CONTENT WRAP — explicit pixel
+    local contentWrap = Instance.new("Frame")
+    contentWrap.Name = "ContentWrap"
+    contentWrap.Size = UDim2.new(0, CONTENT_W, 0, CONTENT_H)
+    contentWrap.Position = UDim2.new(0, SIDEBAR_W, 0, TOPBAR_H)
     contentWrap.BackgroundColor3 = cBg
     contentWrap.BorderSizePixel = 0
     contentWrap.ZIndex = 2
+    contentWrap.Parent = main
 
-    local contentScroll = Instance.new("ScrollingFrame", contentWrap)
+    -- CONTENT SCROLL — explicit pixel (kurangi padding 16)
+    local contentScroll = Instance.new("ScrollingFrame")
     contentScroll.Name = "Content"
-    contentScroll.Size = UDim2.new(0, W - SIDEBAR_W - 16, 0, H - 44 - 16)
+    contentScroll.Size = UDim2.new(0, CONTENT_W - 16, 0, CONTENT_H - 16)
     contentScroll.Position = UDim2.new(0, 8, 0, 8)
     contentScroll.BackgroundTransparency = 1
     contentScroll.BorderSizePixel = 0
@@ -191,10 +181,13 @@ function C.new(ctx)
     contentScroll.ScrollBarImageColor3 = cPurple
     contentScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     contentScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    contentScroll.ClipsDescendants = true
     contentScroll.ZIndex = 3
-    local csList = Instance.new("UIListLayout", contentScroll)
+    contentScroll.Parent = contentWrap
+    local csList = Instance.new("UIListLayout")
     csList.Padding = UDim.new(0, 10)
     csList.SortOrder = Enum.SortOrder.LayoutOrder
+    csList.Parent = contentScroll
 
     self.gui = gui
     self.main = main
@@ -214,38 +207,27 @@ function C.new(ctx)
             if lbl then lbl.TextColor3 = isActive and cText or cSub end
         end
         for n, p in pairs(self.tabPages) do
-            local vis = (n == name)
-            p.Visible = vis
-            if vis then
-                p.Position = UDim2.new(0, 0, 0, 0)
-                p.Size = UDim2.new(1, 0, 0, 0)
-                p.AutomaticSize = Enum.AutomaticSize.Y
-                -- paksa child visible (section dll)
-                for _, ch in ipairs(p:GetChildren()) do
-                    if ch:IsA("GuiObject") then
-                        ch.Visible = true
-                    end
-                end
-            end
+            p.Visible = (n == name)
         end
         self.activeTab = name
     end
 
     for i, name in ipairs(tabs) do
-        local btn = Instance.new("TextButton", sidebar)
+        local btn = Instance.new("TextButton")
         btn.Name = name.."Tab"
-        btn.Size = UDim2.new(1, 0, 0, 36)
+        btn.Size = UDim2.new(0, SIDEBAR_W - 16, 0, 36)
         btn.BackgroundColor3 = cSurface
         btn.Text = ""
         btn.AutoButtonColor = false
         btn.BorderSizePixel = 0
         btn.LayoutOrder = i
         btn.ZIndex = 3
+        btn.Parent = sidebar
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
-        local lbl = Instance.new("TextLabel", btn)
+        local lbl = Instance.new("TextLabel")
         lbl.Name = "Label"
-        lbl.Size = UDim2.new(1, -16, 1, 0)
+        lbl.Size = UDim2.new(0, SIDEBAR_W - 30, 1, 0)
         lbl.Position = UDim2.new(0, 14, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = string.format("%02d  %s", i, name)
@@ -254,17 +236,20 @@ function C.new(ctx)
         lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.ZIndex = 4
+        lbl.Parent = btn
 
-        local page = Instance.new("Frame", contentScroll)
+        -- PAGE — explicit pixel width
+        local page = Instance.new("Frame")
         page.Name = name.."Page"
-        page.Size = UDim2.new(1, 0, 0, 0)
-        page.AutomaticSize = Enum.AutomaticSize.Y
+        page.Size = UDim2.new(0, CONTENT_W - 16, 0, 200)
         page.BackgroundTransparency = 1
         page.Visible = false
         page.ZIndex = 3
-        local pl = Instance.new("UIListLayout", page)
-        pl.Padding = UDim.new(0, 12)
+        page.Parent = contentScroll
+        local pl = Instance.new("UIListLayout")
+        pl.Padding = UDim.new(0, 10)
         pl.SortOrder = Enum.SortOrder.LayoutOrder
+        pl.Parent = page
 
         self.tabButtons[name] = btn
         self.tabPages[name] = page
@@ -308,17 +293,8 @@ function C.new(ctx)
 
     function self:show()
         gui.Enabled = true
-        -- paksa center pakai AbsoluteSize (akurat)
-        task.defer(function()
-            local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
-            local as = main.AbsoluteSize
-            if as.X > 0 and as.Y > 0 then
-                local px = math.floor((vp.X - as.X) / 2)
-                local py = math.floor((vp.Y - as.Y) / 2)
-                if py < 50 then py = 50 end
-                main.Position = UDim2.new(0, px, 0, py)
-            end
-        end)
+        main.Size = UDim2.new(0, W, 0, H)
+        main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
     end
     function self:hide() gui.Enabled = false end
     function self:toggle() gui.Enabled = not gui.Enabled end
@@ -328,7 +304,6 @@ function C.new(ctx)
 
     self:show()
     gui.Enabled = false
-
     return self
 end
 
