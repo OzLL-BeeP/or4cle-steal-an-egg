@@ -408,6 +408,22 @@ end
 
 selectTab("Visual")
 
+-- force Visible = true untuk semua page setelah selectTab
+task.spawn(function()
+    task.wait(0.5)
+    for _, p in pairs(tabPages) do
+        if p and p:IsA("Frame") then
+            local isActive = (p.Name == "VisualPage")
+            p.Visible = isActive
+            if isActive then
+                for _, ch in ipairs(p:GetChildren()) do
+                    if ch:IsA("GuiObject") then ch.Visible = true end
+                end
+            end
+        end
+    end
+end)
+
 -- ═══════════════════════════════════════
 -- COMPONENTS
 -- ═══════════════════════════════════════
