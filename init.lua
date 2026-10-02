@@ -932,19 +932,30 @@ UIS.InputBegan:Connect(function(input, gpe)
 end)
 
 -- recenter
-task.defer(function()
-    local vp2 = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
-    -- clamp window size ke viewport
-    local fitW = math.min(W, vp2.X - 20)
-    local fitH = math.min(H, vp2.Y - 40)
-    if fitH < 200 then fitH = vp2.Y - 20 end
-    main.Size = UDim2.new(0, fitW, 0, fitH)
-    task.wait(0.1)
-    local px = math.max(10, math.floor((vp2.X - fitW) / 2))
-    local py = math.max(40, math.floor((vp2.Y - fitH) / 2) + 10)
-    main.Position = UDim2.new(0, px, 0, py)
-    glow.Position = UDim2.new(0, px - 16, 0, py - 16)
-    shadow.Position = UDim2.new(0, px - 4, 0, py + 6)
+-- recenter ROBUST: paksa posisi dalam viewport
+spawn(function()
+    for i = 1, 10 do
+        task.wait(0.15)
+        local vp2 = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize
+        if vp2 and vp2.Y > 100 then
+            local sz = main.AbsoluteSize
+            if sz.X > 100 and sz.Y > 100 then
+                local px = math.max(10, math.floor((vp2.X - sz.X) / 2))
+                local py = math.max(40, math.floor((vp2.Y - sz.Y) / 2) + 15)
+                -- paksa dalam bounds
+                if px + sz.X > vp2.X - 10 then
+                    px = math.max(10, vp2.X - sz.X - 10)
+                end
+                if py + sz.Y > vp2.Y - 10 then
+                    py = math.max(40, vp2.Y - sz.Y - 10)
+                end
+                main.Position = UDim2.new(0, px, 0, py)
+                glow.Position = UDim2.new(0, px - 16, 0, py - 16)
+                shadow.Position = UDim2.new(0, px - 4, 0, py + 6)
+                break
+            end
+        end
+    end
 end)
 
 _G.OR4CLE = _G.OR4CLE or {}
