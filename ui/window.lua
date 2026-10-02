@@ -213,7 +213,19 @@ function C.new(ctx)
             if lbl then lbl.TextColor3 = isActive and cText or cSub end
         end
         for n, p in pairs(self.tabPages) do
-            p.Visible = (n == name)
+            local vis = (n == name)
+            p.Visible = vis
+            if vis then
+                p.Position = UDim2.new(0, 0, 0, 0)
+                p.Size = UDim2.new(1, 0, 0, 0)
+                p.AutomaticSize = Enum.AutomaticSize.Y
+                -- paksa child visible (section dll)
+                for _, ch in ipairs(p:GetChildren()) do
+                    if ch:IsA("GuiObject") then
+                        ch.Visible = true
+                    end
+                end
+            end
         end
         self.activeTab = name
     end
