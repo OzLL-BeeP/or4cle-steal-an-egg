@@ -94,10 +94,56 @@ mSt.Transparency = 0.7
 local mGrad = Instance.new("UIGradient", mSt)
 mGrad.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, cAccent),
-    ColorSequenceKeypoint.new(0.5, cCyan),
+    ColorSequenceKeypoint.new(0.33, cCyan),
+    ColorSequenceKeypoint.new(0.66, cAccent2),
     ColorSequenceKeypoint.new(1, cAccent),
 }
 mGrad.Rotation = 45
+
+-- animate gradient border rotation
+task.spawn(function()
+    local rot = 45
+    while mGrad.Parent do
+        rot = (rot + 1) % 360
+        mGrad.Rotation = rot
+        task.wait(0.05)
+    end
+end)
+
+-- SHIMMER effect — cahaya bergerak dari kiri atas ke kanan bawah
+local shimmer = Instance.new("Frame")
+shimmer.Name = "Shimmer"
+shimmer.Size = UDim2.new(0, 80, 1, 0)
+shimmer.Position = UDim2.new(0, -100, 0, 0)
+shimmer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+shimmer.BackgroundTransparency = 0.92
+shimmer.BorderSizePixel = 0
+shimmer.ZIndex = 4
+shimmer.Parent = main
+local shGrad = Instance.new("UIGradient", shimmer)
+shGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+    ColorSequenceKeypoint.new(0.5, cCyan),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255)),
+}
+shGrad.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0),
+    NumberSequenceKeypoint.new(1, 1),
+}
+shGrad.Rotation = 30
+
+task.spawn(function()
+    while shimmer.Parent do
+        shimmer.Position = UDim2.new(0, -100, 0, 0)
+        local t = Tween:Create(shimmer, TweenInfo.new(3.5, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(1, 100, 0, 0),
+        })
+        t:Play()
+        t.Completed:Wait()
+        task.wait(2.5)
+    end
+end)
 
 -- top subtle gradient overlay
 local topGrad = Instance.new("Frame")
@@ -178,42 +224,18 @@ tTitle.TextXAlignment = Enum.TextXAlignment.Left
 tTitle.ZIndex = 12
 tTitle.Parent = top
 
--- search box dengan ikon
-local sb = Instance.new("Frame")
-sb.Size = UDim2.new(0, 220, 0, 30)
-sb.Position = UDim2.new(0, SIDEBAR_W + 12, 0, (TOPBAR_H - 30) / 2)
-sb.BackgroundColor3 = cRow
-sb.BorderSizePixel = 0
-sb.ZIndex = 11
-sb.Parent = top
-Instance.new("UICorner", sb).CornerRadius = UDim.new(0, 6)
-
-local sbIco = Instance.new("TextLabel")
-sbIco.Size = UDim2.new(0, 24, 1, 0)
-sbIco.Position = UDim2.new(0, 6, 0, 0)
-sbIco.BackgroundTransparency = 1
-sbIco.Text = "/"
-sbIco.TextColor3 = cMuted
-sbIco.Font = Enum.Font.GothamBold
-sbIco.TextSize = 12
-sbIco.TextXAlignment = Enum.TextXAlignment.Center
-sbIco.ZIndex = 12
-sbIco.Parent = sb
-
-local sbInput = Instance.new("TextBox")
-sbInput.Size = UDim2.new(1, -32, 1, 0)
-sbInput.Position = UDim2.new(0, 28, 0, 0)
-sbInput.BackgroundTransparency = 1
-sbInput.PlaceholderText = "Search..."
-sbInput.PlaceholderColor3 = cDim
-sbInput.Text = ""
-sbInput.TextColor3 = cText
-sbInput.Font = Enum.Font.Gotham
-sbInput.TextSize = 12
-sbInput.TextXAlignment = Enum.TextXAlignment.Left
-sbInput.ClearTextOnFocus = false
-sbInput.ZIndex = 12
-sbInput.Parent = sb
+-- search dihapus — ganti subtitle kecil
+local tSub = Instance.new("TextLabel")
+tSub.Size = UDim2.new(0, 200, 0, 12)
+tSub.Position = UDim2.new(0, 50, 0, 30)
+tSub.BackgroundTransparency = 1
+tSub.Text = "Steal An Egg  ·  v" .. VERSION
+tSub.TextColor3 = cDim
+tSub.Font = Enum.Font.Gotham
+tSub.TextSize = 9
+tSub.TextXAlignment = Enum.TextXAlignment.Left
+tSub.ZIndex = 12
+tSub.Parent = top
 
 -- window controls
 local function mkCtrl(text, xOff, hover, onClick)
@@ -815,6 +837,41 @@ blogo.ScaleType = Enum.ScaleType.Crop
 blogo.ZIndex = 4
 blogo.Parent = bb
 Instance.new("UICorner", blogo).CornerRadius = UDim.new(1, 0)
+
+-- bubble shimmer (cahaya bergerak di atas logo)
+local bShimmer = Instance.new("Frame")
+bShimmer.Size = UDim2.new(0, 18, 1, 0)
+bShimmer.Position = UDim2.new(0, -20, 0, 0)
+bShimmer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+bShimmer.BackgroundTransparency = 0.7
+bShimmer.BorderSizePixel = 0
+bShimmer.ZIndex = 5
+bShimmer.Parent = bb
+Instance.new("UICorner", bShimmer).CornerRadius = UDim.new(1, 0)
+local bShGrad = Instance.new("UIGradient", bShimmer)
+bShGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+    ColorSequenceKeypoint.new(0.5, cCyan),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255)),
+}
+bShGrad.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0.2),
+    NumberSequenceKeypoint.new(1, 1),
+}
+bShGrad.Rotation = 30
+
+task.spawn(function()
+    while bShimmer.Parent do
+        bShimmer.Position = UDim2.new(0, -20, 0, 0)
+        local t = Tween:Create(bShimmer, TweenInfo.new(2.5, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(1, 20, 0, 0),
+        })
+        t:Play()
+        t.Completed:Wait()
+        task.wait(2)
+    end
+end)
 
 -- pulse animation
 task.spawn(function()
