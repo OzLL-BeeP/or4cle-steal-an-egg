@@ -79,6 +79,7 @@ function C.new(ctx)
     main.Name = "Main"
     main.Size = UDim2.new(0, W, 0, H)
     main.Position = UDim2.new(0.5, -W/2, 0.5, -H/2)
+    main.ClipsDescendants = true
     main.BackgroundColor3 = cBg
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
@@ -174,7 +175,7 @@ function C.new(ctx)
     sbPad.PaddingRight = UDim.new(0, 8)
 
     local contentWrap = Instance.new("Frame", main)
-    contentWrap.Size = UDim2.new(1, -SIDEBAR_W, 1, -44)
+    contentWrap.Size = UDim2.new(0, W - SIDEBAR_W, 0, H - 44)
     contentWrap.Position = UDim2.new(0, SIDEBAR_W, 0, 44)
     contentWrap.BackgroundColor3 = cBg
     contentWrap.BorderSizePixel = 0
@@ -182,7 +183,7 @@ function C.new(ctx)
 
     local contentScroll = Instance.new("ScrollingFrame", contentWrap)
     contentScroll.Name = "Content"
-    contentScroll.Size = UDim2.new(1, -16, 1, -16)
+    contentScroll.Size = UDim2.new(0, W - SIDEBAR_W - 16, 0, H - 44 - 16)
     contentScroll.Position = UDim2.new(0, 8, 0, 8)
     contentScroll.BackgroundTransparency = 1
     contentScroll.BorderSizePixel = 0
