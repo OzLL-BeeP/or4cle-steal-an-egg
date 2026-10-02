@@ -1,4 +1,4 @@
--- ui/pages3.lua — content 5 tabs (EN, referensi style)
+-- ui/pages3.lua — content 5 tabs
 local C = {}
 C.__index = C
 
@@ -12,54 +12,53 @@ function C.new(ctx, window)
     local T = self.cfg.Theme or {}
     local cPurple = T.Purple or Color3.fromRGB(138, 90, 250)
     local cText = Color3.fromRGB(240, 240, 248)
-    local cSub = Color3.fromRGB(130, 130, 155)
-    local cMuted = Color3.fromRGB(70, 70, 90)
+    local cSub = Color3.fromRGB(120, 120, 140)
+    local cMuted = Color3.fromRGB(80, 80, 100)
     local cSurface2 = Color3.fromRGB(24, 24, 34)
-    local cBorder = Color3.fromRGB(35, 32, 55)
+    local cBorder = Color3.fromRGB(32, 32, 44)
 
-    -- ═══ SECTION HEADER (uppercase kecil) ═══
+    -- rarity 01-10
+    local rarityOptions = {}
+    local rarityMap = {"Common","Uncommon","Rare","Epic","Legendary","Mythic","Cosmic","Secret","Eternal","Divine"}
+    for i, r in ipairs(rarityMap) do
+        table.insert(rarityOptions, string.format("%02d %s", i, r))
+    end
+
     local function makeGroup(page, headerText)
         local wrap = Instance.new("Frame", page)
         wrap.Size = UDim2.new(1, 0, 0, 0)
         wrap.AutomaticSize = Enum.AutomaticSize.Y
         wrap.BackgroundTransparency = 1
-        wrap.ZIndex = 7
 
         local hdr = Instance.new("TextLabel", wrap)
         hdr.Size = UDim2.new(1, 0, 0, 16)
         hdr.BackgroundTransparency = 1
         hdr.Text = string.upper(headerText)
         hdr.TextColor3 = cSub
-        hdr.Font = Enum.Font.GothamMedium
-        hdr.TextSize = 11
+        hdr.Font = Enum.Font.GothamBold
+        hdr.TextSize = 10
         hdr.TextXAlignment = Enum.TextXAlignment.Left
-        hdr.ZIndex = 8
 
         local body = Instance.new("Frame", wrap)
         body.Size = UDim2.new(1, 0, 0, 0)
         body.Position = UDim2.new(0, 0, 0, 22)
         body.AutomaticSize = Enum.AutomaticSize.Y
-        body.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
-        body.BorderSizePixel = 0
-        body.ZIndex = 7
-        Instance.new("UICorner", body).CornerRadius = UDim.new(0, 8)
-
+        body.BackgroundTransparency = 1
         local ll = Instance.new("UIListLayout", body)
-        ll.Padding = UDim.new(0, 0)
-        ll.SortOrder = Enum.SortOrder.LayoutOrder
-
+        ll.Padding = UDim.new(0, 2)
         return body
     end
 
-    -- ═══ TOGGLE ROW (label OFF/ON di kanan) ═══
     local function makeToggle(parent, labelText, default, onChange)
         local row = Instance.new("Frame", parent)
-        row.Size = UDim2.new(1, 0, 0, 44)
-        row.BackgroundTransparency = 1
+        row.Size = UDim2.new(1, 0, 0, 40)
+        row.BackgroundColor3 = cSurface2
+        row.BorderSizePixel = 0
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
 
         local lbl = Instance.new("TextLabel", row)
-        lbl.Size = UDim2.new(1, -100, 1, 0)
-        lbl.Position = UDim2.new(0, 14, 0, 0)
+        lbl.Size = UDim2.new(1, -110, 1, 0)
+        lbl.Position = UDim2.new(0, 16, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = labelText
         lbl.TextColor3 = cText
@@ -69,7 +68,7 @@ function C.new(ctx, window)
 
         local stateLbl = Instance.new("TextLabel", row)
         stateLbl.Size = UDim2.new(0, 30, 1, 0)
-        stateLbl.Position = UDim2.new(1, -86, 0, 0)
+        stateLbl.Position = UDim2.new(1, -84, 0, 0)
         stateLbl.BackgroundTransparency = 1
         stateLbl.Text = default and "ON" or "OFF"
         stateLbl.TextColor3 = cSub
@@ -78,11 +77,10 @@ function C.new(ctx, window)
         stateLbl.TextXAlignment = Enum.TextXAlignment.Right
 
         local state = default or false
-
         local btn = Instance.new("TextButton", row)
         btn.Size = UDim2.new(0, 34, 0, 18)
-        btn.Position = UDim2.new(1, -40, 0.5, -9)
-        btn.BackgroundColor3 = state and cPurple or Color3.fromRGB(40, 40, 55)
+        btn.Position = UDim2.new(1, -42, 0.5, -9)
+        btn.BackgroundColor3 = state and cPurple or Color3.fromRGB(50, 50, 65)
         btn.Text = ""
         btn.AutoButtonColor = false
         btn.BorderSizePixel = 0
@@ -97,24 +95,24 @@ function C.new(ctx, window)
 
         btn.MouseButton1Click:Connect(function()
             state = not state
-            btn.BackgroundColor3 = state and cPurple or Color3.fromRGB(40, 40, 55)
+            btn.BackgroundColor3 = state and cPurple or Color3.fromRGB(50, 50, 65)
             dot.Position = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
             stateLbl.Text = state and "ON" or "OFF"
             if onChange then pcall(onChange, state) end
         end)
-
         return {get=function() return state end}
     end
 
-    -- ═══ PICKER (label + chevron v) ═══
     local function makePicker(parent, labelText, options, default, onSelect)
         local row = Instance.new("Frame", parent)
-        row.Size = UDim2.new(1, 0, 0, 44)
-        row.BackgroundTransparency = 1
+        row.Size = UDim2.new(1, 0, 0, 40)
+        row.BackgroundColor3 = cSurface2
+        row.BorderSizePixel = 0
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
 
         local lbl = Instance.new("TextLabel", row)
         lbl.Size = UDim2.new(1, -180, 1, 0)
-        lbl.Position = UDim2.new(0, 14, 0, 0)
+        lbl.Position = UDim2.new(0, 16, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = labelText
         lbl.TextColor3 = cText
@@ -125,8 +123,8 @@ function C.new(ctx, window)
         local value = default or (options and options[1]) or ""
 
         local btn = Instance.new("TextButton", row)
-        btn.Size = UDim2.new(0, 150, 0, 30)
-        btn.Position = UDim2.new(1, -164, 0.5, -15)
+        btn.Size = UDim2.new(0, 160, 1, 0)
+        btn.Position = UDim2.new(1, -168, 0, 0)
         btn.BackgroundTransparency = 1
         btn.Text = ""
         btn.AutoButtonColor = false
@@ -151,9 +149,9 @@ function C.new(ctx, window)
 
         local popup = Instance.new("Frame", row)
         popup.Visible = false
-        popup.Size = UDim2.new(0, 150, 0, 0)
+        popup.Size = UDim2.new(0, 160, 0, 0)
         popup.AutomaticSize = Enum.AutomaticSize.Y
-        popup.Position = UDim2.new(1, -164, 1, 4)
+        popup.Position = UDim2.new(1, -168, 1, 4)
         popup.BackgroundColor3 = cSurface2
         popup.BorderSizePixel = 0
         popup.ZIndex = 50
@@ -161,7 +159,6 @@ function C.new(ctx, window)
         local pst = Instance.new("UIStroke", popup)
         pst.Color = cBorder
         pst.Thickness = 1
-
         local pl = Instance.new("UIListLayout", popup)
         pl.Padding = UDim.new(0, 1)
         local pp = Instance.new("UIPadding", popup)
@@ -174,7 +171,7 @@ function C.new(ctx, window)
 
         for _, opt in ipairs(options or {}) do
             local o = Instance.new("TextButton", popup)
-            o.Size = UDim2.new(1, 0, 0, 24)
+            o.Size = UDim2.new(1, 0, 0, 22)
             o.BackgroundColor3 = cSurface2
             o.Text = tostring(opt)
             o.TextColor3 = cText
@@ -189,19 +186,12 @@ function C.new(ctx, window)
                 if onSelect then pcall(onSelect, opt) end
             end)
         end
-
         return {get=function() return value end}
     end
 
-    -- ═══ BUTTON ROW ═══
     local function makeButton(parent, labelText, onClick)
-        local row = Instance.new("Frame", parent)
-        row.Size = UDim2.new(1, 0, 0, 40)
-        row.BackgroundTransparency = 1
-
-        local btn = Instance.new("TextButton", row)
-        btn.Size = UDim2.new(1, -24, 1, -8)
-        btn.Position = UDim2.new(0, 12, 0, 4)
+        local btn = Instance.new("TextButton", parent)
+        btn.Size = UDim2.new(1, 0, 0, 36)
         btn.BackgroundColor3 = cSurface2
         btn.Text = labelText
         btn.TextColor3 = cText
@@ -218,9 +208,7 @@ function C.new(ctx, window)
         end)
     end
 
-    -- ═══════════════════════════════════════
-    -- VISUAL
-    -- ═══════════════════════════════════════
+    -- VISUALS
     local v = self.win:getPage("Visual")
     if v then
         local g1 = makeGroup(v, "Egg ESP")
@@ -232,16 +220,19 @@ function C.new(ctx, window)
         end)
 
         local g2 = makeGroup(v, "ESP Rarity")
-        makePicker(g2, "ESP Min Tier: Rare", self.cfg.RarityOrder or {}, "Rare", function(opt)
-            _G.OR4CLE.filters = _G.OR4CLE.filters or {}
-            _G.OR4CLE.filters.esp_minRarity = opt
-            if self.modules.esp_egg and self.modules.esp_egg.setMinRarity then
-                self.modules.esp_egg.setMinRarity(opt)
+        makePicker(g2, "ESP Min Tier", rarityOptions, "03 Rare", function(opt)
+            local num = tonumber(opt:match("^(%d+)"))
+            if num then
+                _G.OR4CLE.filters = _G.OR4CLE.filters or {}
+                _G.OR4CLE.filters.esp_minRarityNum = num
+                if self.modules.esp_egg and self.modules.esp_egg.setMinRarityNum then
+                    self.modules.esp_egg.setMinRarityNum(num)
+                end
             end
         end)
 
         local g3 = makeGroup(v, "ESP Style")
-        makePicker(g3, "Style: Panel", {"Panel","Text","Minimal"}, "Panel")
+        makePicker(g3, "Style", {"Panel","Text","Minimal"}, "Panel")
 
         local g4 = makeGroup(v, "ESP Settings")
         makeToggle(g4, "Show Pet Name", true)
@@ -265,12 +256,9 @@ function C.new(ctx, window)
             end
         end)
         makePicker(g5, "Evasive Mode", {"Off","Auto-Hide","Auto-Teleport","Notify Only"}, "Notify Only")
-        makeToggle(g5, "Guardian Radar", true)
     end
 
-    -- ═══════════════════════════════════════
     -- FARM
-    -- ═══════════════════════════════════════
     local f = self.win:getPage("Farm")
     if f then
         local g1 = makeGroup(f, "Auto Steal")
@@ -280,8 +268,8 @@ function C.new(ctx, window)
                 else pcall(self.modules.auto_steal.stop) end
             end
         end)
-        makePicker(g1, "Mode: Teleport", {"Teleport","Idle"}, "Teleport")
-        makePicker(g1, "Priority: Rarest", {"Rarest","Biggest","Nearest","Fastest"}, "Rarest")
+        makePicker(g1, "Mode", {"Teleport","Idle"}, "Teleport")
+        makePicker(g1, "Priority", {"Rarest","Biggest","Nearest","Fastest"}, "Rarest")
         makeToggle(g1, "Ignore Guardian", false)
 
         local g2 = makeGroup(f, "Auto Hatch")
@@ -291,7 +279,7 @@ function C.new(ctx, window)
                 else pcall(self.modules.auto_hatch.stop) end
             end
         end)
-        makePicker(g2, "Speed: Normal", {"Safe","Normal","Turbo"}, "Normal")
+        makePicker(g2, "Speed", {"Safe","Normal","Turbo"}, "Normal")
 
         local g3 = makeGroup(f, "Auto Place")
         makeToggle(g3, "Enable Auto Place", false, function(state)
@@ -318,9 +306,7 @@ function C.new(ctx, window)
         end)
     end
 
-    -- ═══════════════════════════════════════
-    -- FRIENDS
-    -- ═══════════════════════════════════════
+    -- FRIEND
     local fr = self.win:getPage("Friends")
     if fr then
         local g1 = makeGroup(fr, "Drop for Friends")
@@ -334,15 +320,13 @@ function C.new(ctx, window)
         makeButton(g1, "Refresh Friend List", function() end)
     end
 
-    -- ═══════════════════════════════════════
-    -- INFO
-    -- ═══════════════════════════════════════
+    -- UTILITY
     local info = self.win:getPage("Info")
     if info then
         local g1 = makeGroup(info, "Live Info")
         local clk = Instance.new("TextLabel", g1)
-        clk.Size = UDim2.new(1, -28, 0, 20)
-        clk.Position = UDim2.new(0, 14, 0, 8)
+        clk.Size = UDim2.new(1, -20, 0, 20)
+        clk.Position = UDim2.new(0, 10, 0, 6)
         clk.BackgroundTransparency = 1
         clk.Text = "Time: --:--"
         clk.TextColor3 = cPurple
@@ -360,8 +344,8 @@ function C.new(ctx, window)
 
         for i = 1, 10 do
             local slot = Instance.new("TextLabel", g1)
-            slot.Size = UDim2.new(1, -28, 0, 18)
-            slot.Position = UDim2.new(0, 14, 0, 32 + (i-1) * 20)
+            slot.Size = UDim2.new(1, -20, 0, 18)
+            slot.Position = UDim2.new(0, 10, 0, 34 + (i-1) * 20)
             slot.BackgroundTransparency = 1
             slot.Text = string.format("%02d. --", i)
             slot.TextColor3 = cSub
@@ -371,9 +355,7 @@ function C.new(ctx, window)
         end
     end
 
-    -- ═══════════════════════════════════════
     -- SETTINGS
-    -- ═══════════════════════════════════════
     local s = self.win:getPage("Settings")
     if s then
         local g1 = makeGroup(s, "Performance")
@@ -383,7 +365,7 @@ function C.new(ctx, window)
                 else pcall(self.modules.anti_lag.stop) end
             end
         end)
-        makePicker(g1, "FPS Cap: 60", {"30","45","60","Unlimited"}, "60")
+        makePicker(g1, "FPS Cap", {"30","45","60","Unlimited"}, "60")
         makeToggle(g1, "Disable Particles", true)
         makeToggle(g1, "Disable Shadows", true)
 
@@ -394,11 +376,9 @@ function C.new(ctx, window)
                 else pcall(self.modules.server_guard.stop) end
             end
         end)
-        makePicker(g2, "Action: Notify Only", {"Auto-Leave","Auto-Hop","Notify Only"}, "Notify Only")
-        makePicker(g2, "Hop After: 15 min", {"5 min","15 min","30 min","60 min"}, "15 min")
+        makePicker(g2, "Action", {"Auto-Leave","Auto-Hop","Notify Only"}, "Notify Only")
 
         local g3 = makeGroup(s, "Debug")
-        makeToggle(g3, "Safe Mode", true)
         makeButton(g3, "Reload Script", function()
             if _G.OR4CLE and _G.OR4CLE.loader then pcall(_G.OR4CLE.loader) end
         end)
