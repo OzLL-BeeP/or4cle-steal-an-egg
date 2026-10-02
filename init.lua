@@ -1,6 +1,8 @@
--- OR4CLE — Ride A Pet style (Steal An Egg)
+-- OR4CLE — Ultra Premium UI
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local Tween = game:GetService("TweenService")
+local Run = game:GetService("RunService")
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
@@ -9,26 +11,38 @@ for _, x in ipairs(pg:GetChildren()) do
 end
 
 local LOGO = "rbxassetid://114651091062453"
-local VERSION = "0.5.0"
+local VERSION = "1.0.0"
 
-local cBg        = Color3.fromRGB(12, 13, 20)
-local cBg2       = Color3.fromRGB(15, 16, 24)
-local cRow       = Color3.fromRGB(20, 21, 32)
-local cRowHover  = Color3.fromRGB(26, 27, 40)
+local function tw(o, t, p, s)
+    local tn = Tween:Create(o, TweenInfo.new(t or 0.2, s or Enum.EasingStyle.Quart, Enum.EasingDirection.Out), p)
+    tn:Play()
+    return tn
+end
+
+-- palette
+local cBg        = Color3.fromRGB(10, 11, 17)
+local cBg2       = Color3.fromRGB(13, 14, 22)
+local cPanel     = Color3.fromRGB(17, 18, 28)
+local cRow       = Color3.fromRGB(22, 23, 35)
+local cRowHi     = Color3.fromRGB(28, 30, 44)
 local cAccent    = Color3.fromRGB(140, 92, 252)
-local cAccent2   = Color3.fromRGB(105, 65, 220)
-local cText      = Color3.fromRGB(232, 232, 240)
-local cLabel     = Color3.fromRGB(200, 200, 215)
-local cDim       = Color3.fromRGB(130, 130, 150)
-local cMuted     = Color3.fromRGB(70, 72, 88)
-local cLine      = Color3.fromRGB(28, 30, 44)
+local cAccent2   = Color3.fromRGB(180, 130, 255)
+local cCyan      = Color3.fromRGB(95, 210, 255)
+local cText      = Color3.fromRGB(240, 240, 250)
+local cLabel     = Color3.fromRGB(205, 205, 220)
+local cDim       = Color3.fromRGB(125, 128, 148)
+local cMuted     = Color3.fromRGB(62, 65, 82)
+local cLine      = Color3.fromRGB(32, 34, 50)
 
 local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
-local W = math.min(560, vp.X - 20)
-local H = math.min(400, vp.Y - 30)
-local SIDEBAR_W = 140
-local TOPBAR_H = 48
+local W = math.min(580, vp.X - 20)
+local H = math.min(420, vp.Y - 30)
+local SIDEBAR_W = 148
+local TOPBAR_H = 52
 
+-- ═══════════════════════════════════════
+-- WINDOW
+-- ═══════════════════════════════════════
 local gui = Instance.new("ScreenGui")
 gui.Name = "OR4CLE_Window"
 gui.ResetOnSpawn = false
@@ -37,6 +51,31 @@ gui.IgnoreGuiInset = true
 gui.Enabled = false
 gui.Parent = pg
 
+-- outer ambient glow
+local glow = Instance.new("Frame")
+glow.Name = "Glow"
+glow.Size = UDim2.new(0, W + 32, 0, H + 32)
+glow.Position = UDim2.new(0, 40 - 16, 0, 80 - 16)
+glow.BackgroundColor3 = cAccent
+glow.BackgroundTransparency = 0.93
+glow.BorderSizePixel = 0
+glow.ZIndex = 0
+glow.Parent = gui
+Instance.new("UICorner", glow).CornerRadius = UDim.new(0, 20)
+
+-- drop shadow
+local shadow = Instance.new("Frame")
+shadow.Name = "Shadow"
+shadow.Size = UDim2.new(0, W + 8, 0, H + 8)
+shadow.Position = UDim2.new(0, 40 - 4, 0, 80 + 6)
+shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
+shadow.BackgroundTransparency = 0.45
+shadow.BorderSizePixel = 0
+shadow.ZIndex = 1
+shadow.Parent = gui
+Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 14)
+
+-- main
 local main = Instance.new("Frame")
 main.Name = "Main"
 main.Size = UDim2.new(0, W, 0, H)
@@ -45,12 +84,40 @@ main.BackgroundColor3 = cBg
 main.BorderSizePixel = 0
 main.ZIndex = 2
 main.Parent = gui
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
 
-local ms = Instance.new("UIStroke", main)
-ms.Color = Color3.fromRGB(40, 36, 60)
-ms.Thickness = 1
+-- gradient border
+local mSt = Instance.new("UIStroke", main)
+mSt.Color = Color3.fromRGB(255,255,255)
+mSt.Thickness = 1
+mSt.Transparency = 0.7
+local mGrad = Instance.new("UIGradient", mSt)
+mGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, cAccent),
+    ColorSequenceKeypoint.new(0.5, cCyan),
+    ColorSequenceKeypoint.new(1, cAccent),
+}
+mGrad.Rotation = 45
 
+-- top subtle gradient overlay
+local topGrad = Instance.new("Frame")
+topGrad.Size = UDim2.new(1, 0, 0, 100)
+topGrad.BackgroundColor3 = Color3.fromRGB(255,255,255)
+topGrad.BackgroundTransparency = 0.98
+topGrad.BorderSizePixel = 0
+topGrad.ZIndex = 3
+topGrad.Parent = main
+Instance.new("UICorner", topGrad).CornerRadius = UDim.new(0, 12)
+local tgGrad = Instance.new("UIGradient", topGrad)
+tgGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, cAccent),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,0)),
+}
+tgGrad.Rotation = 90
+
+-- ═══════════════════════════════════════
+-- TOPBAR
+-- ═══════════════════════════════════════
 local top = Instance.new("Frame")
 top.Name = "Topbar"
 top.Size = UDim2.new(0, W, 0, TOPBAR_H)
@@ -58,7 +125,7 @@ top.BackgroundColor3 = cBg2
 top.BorderSizePixel = 0
 top.ZIndex = 10
 top.Parent = main
-Instance.new("UICorner", top).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", top).CornerRadius = UDim.new(0, 12)
 
 local tmask = Instance.new("Frame")
 tmask.Size = UDim2.new(0, W, 0, 16)
@@ -68,20 +135,76 @@ tmask.BorderSizePixel = 0
 tmask.ZIndex = 10
 tmask.Parent = top
 
+-- topbar logo kecil dengan glow
+local tLogoWrap = Instance.new("Frame")
+tLogoWrap.Size = UDim2.new(0, 28, 0, 28)
+tLogoWrap.Position = UDim2.new(0, 14, 0.5, -14)
+tLogoWrap.BackgroundColor3 = cRow
+tLogoWrap.BorderSizePixel = 0
+tLogoWrap.ZIndex = 12
+tLogoWrap.Parent = top
+Instance.new("UICorner", tLogoWrap).CornerRadius = UDim.new(1, 0)
+
+local tlSt = Instance.new("UIStroke", tLogoWrap)
+tlSt.Color = Color3.fromRGB(255,255,255)
+tlSt.Thickness = 1.5
+local tlGrad = Instance.new("UIGradient", tlSt)
+tlGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, cAccent),
+    ColorSequenceKeypoint.new(1, cCyan),
+}
+tlGrad.Rotation = 45
+
+local tLogo = Instance.new("ImageLabel")
+tLogo.Size = UDim2.new(1, -4, 1, -4)
+tLogo.Position = UDim2.new(0, 2, 0, 2)
+tLogo.BackgroundTransparency = 1
+tLogo.Image = LOGO
+tLogo.ScaleType = Enum.ScaleType.Crop
+tLogo.ZIndex = 13
+tLogo.Parent = tLogoWrap
+Instance.new("UICorner", tLogo).CornerRadius = UDim.new(1, 0)
+
+-- title kecil di top
+local tTitle = Instance.new("TextLabel")
+tTitle.Size = UDim2.new(0, 150, 1, 0)
+tTitle.Position = UDim2.new(0, 50, 0, 0)
+tTitle.BackgroundTransparency = 1
+tTitle.Text = "OR4CLE"
+tTitle.TextColor3 = cText
+tTitle.Font = Enum.Font.GothamBold
+tTitle.TextSize = 14
+tTitle.TextXAlignment = Enum.TextXAlignment.Left
+tTitle.ZIndex = 12
+tTitle.Parent = top
+
+-- search box dengan ikon
 local sb = Instance.new("Frame")
 sb.Size = UDim2.new(0, 220, 0, 30)
-sb.Position = UDim2.new(0, SIDEBAR_W + 12, 0, 9)
+sb.Position = UDim2.new(0, SIDEBAR_W + 12, 0, (TOPBAR_H - 30) / 2)
 sb.BackgroundColor3 = cRow
 sb.BorderSizePixel = 0
 sb.ZIndex = 11
 sb.Parent = top
 Instance.new("UICorner", sb).CornerRadius = UDim.new(0, 6)
 
+local sbIco = Instance.new("TextLabel")
+sbIco.Size = UDim2.new(0, 24, 1, 0)
+sbIco.Position = UDim2.new(0, 6, 0, 0)
+sbIco.BackgroundTransparency = 1
+sbIco.Text = "/"
+sbIco.TextColor3 = cMuted
+sbIco.Font = Enum.Font.GothamBold
+sbIco.TextSize = 12
+sbIco.TextXAlignment = Enum.TextXAlignment.Center
+sbIco.ZIndex = 12
+sbIco.Parent = sb
+
 local sbInput = Instance.new("TextBox")
-sbInput.Size = UDim2.new(1, -20, 1, 0)
-sbInput.Position = UDim2.new(0, 10, 0, 0)
+sbInput.Size = UDim2.new(1, -32, 1, 0)
+sbInput.Position = UDim2.new(0, 28, 0, 0)
 sbInput.BackgroundTransparency = 1
-sbInput.PlaceholderText = "cari..."
+sbInput.PlaceholderText = "Search..."
 sbInput.PlaceholderColor3 = cDim
 sbInput.Text = ""
 sbInput.TextColor3 = cText
@@ -92,20 +215,38 @@ sbInput.ClearTextOnFocus = false
 sbInput.ZIndex = 12
 sbInput.Parent = sb
 
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 28, 0, 28)
-closeBtn.Position = UDim2.new(0, W - 38, 0, 10)
-closeBtn.BackgroundColor3 = cRow
-closeBtn.Text = "X"
-closeBtn.TextColor3 = cLabel
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 13
-closeBtn.BorderSizePixel = 0
-closeBtn.AutoButtonColor = false
-closeBtn.ZIndex = 11
-closeBtn.Parent = top
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+-- window controls
+local function mkCtrl(text, xOff, hover, onClick)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 28, 0, 28)
+    b.Position = UDim2.new(0, W - xOff, 0.5, -14)
+    b.BackgroundColor3 = cRow
+    b.Text = text
+    b.TextColor3 = cDim
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 13
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.ZIndex = 11
+    b.Parent = top
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
 
+    b.MouseEnter:Connect(function() tw(b, 0.15, {BackgroundColor3 = hover, TextColor3 = Color3.fromRGB(255,255,255)}) end)
+    b.MouseLeave:Connect(function() tw(b, 0.15, {BackgroundColor3 = cRow, TextColor3 = cDim}) end)
+    b.MouseButton1Click:Connect(function() if onClick then pcall(onClick) end end)
+    return b
+end
+
+local closeBtn = mkCtrl("X", 42, Color3.fromRGB(240,70,90), function()
+    for _, x in ipairs(pg:GetChildren()) do
+        if x:IsA("ScreenGui") and x.Name:find("OR4CLE") then x:Destroy() end
+    end
+end)
+local minBtn = mkCtrl("-", 78, cAccent, function() gui.Enabled = false end)
+
+-- ═══════════════════════════════════════
+-- SIDEBAR
+-- ═══════════════════════════════════════
 local sidebar = Instance.new("Frame")
 sidebar.Name = "Sidebar"
 sidebar.Size = UDim2.new(0, SIDEBAR_W, 0, H - TOPBAR_H)
@@ -115,6 +256,7 @@ sidebar.BorderSizePixel = 0
 sidebar.ZIndex = 5
 sidebar.Parent = main
 
+-- content
 local contentArea = Instance.new("Frame")
 contentArea.Name = "ContentArea"
 contentArea.Size = UDim2.new(0, W - SIDEBAR_W, 0, H - TOPBAR_H)
@@ -138,9 +280,12 @@ cs.ZIndex = 6
 cs.Parent = contentArea
 
 local csl = Instance.new("UIListLayout")
-csl.Padding = UDim.new(0, 18)
+csl.Padding = UDim.new(0, 20)
 csl.Parent = cs
 
+-- ═══════════════════════════════════════
+-- TABS
+-- ═══════════════════════════════════════
 local tabDefs = {
     {id="Visual",   name="VISUALS"},
     {id="Farm",     name="FARM"},
@@ -154,9 +299,17 @@ local function selectTab(id)
     for n, b in pairs(tabButtons) do
         local a = (n == id)
         local lbl = b:FindFirstChild("Lbl")
-        if lbl then lbl.TextColor3 = a and cText or cDim end
+        if lbl then tw(lbl, 0.2, {TextColor3 = a and cText or cDim}) end
         local ln = tabLines[n]
-        if ln then ln.Visible = a end
+        if ln then
+            if a then
+                ln.Visible = true
+                ln.Size = UDim2.new(0, 0, 0, 2)
+                tw(ln, 0.25, {Size = UDim2.new(0, SIDEBAR_W - 48, 0, 2)})
+            else
+                ln.Visible = false
+            end
+        end
     end
     for n, p in pairs(tabPages) do p.Visible = (n == id) end
 end
@@ -164,8 +317,8 @@ end
 for i, def in ipairs(tabDefs) do
     local btn = Instance.new("TextButton")
     btn.Name = def.id .. "Tab"
-    btn.Size = UDim2.new(0, SIDEBAR_W, 0, 38)
-    btn.Position = UDim2.new(0, 0, 0, 16 + (i-1) * 40)
+    btn.Size = UDim2.new(0, SIDEBAR_W, 0, 40)
+    btn.Position = UDim2.new(0, 0, 0, 18 + (i-1) * 42)
     btn.BackgroundColor3 = cBg
     btn.Text = ""
     btn.AutoButtonColor = false
@@ -175,8 +328,8 @@ for i, def in ipairs(tabDefs) do
 
     local lbl = Instance.new("TextLabel")
     lbl.Name = "Lbl"
-    lbl.Size = UDim2.new(1, -24, 1, 0)
-    lbl.Position = UDim2.new(0, 20, 0, 0)
+    lbl.Size = UDim2.new(1, -28, 1, 0)
+    lbl.Position = UDim2.new(0, 24, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = def.name
     lbl.TextColor3 = cDim
@@ -187,14 +340,19 @@ for i, def in ipairs(tabDefs) do
     lbl.Parent = btn
 
     local line = Instance.new("Frame")
-    line.Size = UDim2.new(0, SIDEBAR_W - 40, 0, 2)
-    line.Position = UDim2.new(0, 20, 1, -6)
+    line.Size = UDim2.new(0, SIDEBAR_W - 48, 0, 2)
+    line.Position = UDim2.new(0, 24, 1, -6)
     line.BackgroundColor3 = cAccent
     line.BorderSizePixel = 0
     line.Visible = false
     line.ZIndex = 8
     line.Parent = btn
     Instance.new("UICorner", line).CornerRadius = UDim.new(1, 0)
+    local lGrad = Instance.new("UIGradient", line)
+    lGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, cAccent),
+        ColorSequenceKeypoint.new(1, cCyan),
+    }
 
     tabButtons[def.id] = btn
     tabLines[def.id] = line
@@ -208,23 +366,26 @@ for i, def in ipairs(tabDefs) do
     page.ZIndex = 6
     page.Parent = cs
     local pl = Instance.new("UIListLayout")
-    pl.Padding = UDim.new(0, 18)
+    pl.Padding = UDim.new(0, 20)
     pl.Parent = page
 
     tabPages[def.id] = page
 
     btn.MouseButton1Click:Connect(function() selectTab(def.id) end)
     btn.MouseEnter:Connect(function()
-        if lbl then lbl.TextColor3 = cLabel end
+        if lbl then tw(lbl, 0.15, {TextColor3 = cLabel}) end
     end)
     btn.MouseLeave:Connect(function()
         local active = tabLines[def.id] and tabLines[def.id].Visible
-        if lbl and not active then lbl.TextColor3 = cDim end
+        if lbl and not active then tw(lbl, 0.15, {TextColor3 = cDim}) end
     end)
 end
 
 selectTab("Visual")
 
+-- ═══════════════════════════════════════
+-- COMPONENTS
+-- ═══════════════════════════════════════
 local function makeGroup(page, titleText)
     local wrap = Instance.new("Frame")
     wrap.Size = UDim2.new(1, 0, 0, 0)
@@ -232,19 +393,34 @@ local function makeGroup(page, titleText)
     wrap.BackgroundTransparency = 1
     wrap.Parent = page
 
+    -- header row: bar + label
+    local hdrRow = Instance.new("Frame")
+    hdrRow.Size = UDim2.new(1, 0, 0, 18)
+    hdrRow.BackgroundTransparency = 1
+    hdrRow.Parent = wrap
+
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 3, 0, 12)
+    bar.Position = UDim2.new(0, 0, 0.5, -6)
+    bar.BackgroundColor3 = cAccent
+    bar.BorderSizePixel = 0
+    bar.Parent = hdrRow
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
     local hdr = Instance.new("TextLabel")
-    hdr.Size = UDim2.new(1, 0, 0, 16)
+    hdr.Size = UDim2.new(1, -10, 1, 0)
+    hdr.Position = UDim2.new(0, 10, 0, 0)
     hdr.BackgroundTransparency = 1
     hdr.Text = string.upper(titleText)
     hdr.TextColor3 = cDim
     hdr.Font = Enum.Font.GothamBold
     hdr.TextSize = 10
     hdr.TextXAlignment = Enum.TextXAlignment.Left
-    hdr.Parent = wrap
+    hdr.Parent = hdrRow
 
     local body = Instance.new("Frame")
     body.Size = UDim2.new(1, 0, 0, 0)
-    body.Position = UDim2.new(0, 0, 0, 24)
+    body.Position = UDim2.new(0, 0, 0, 26)
     body.AutomaticSize = Enum.AutomaticSize.Y
     body.BackgroundTransparency = 1
     body.Parent = wrap
@@ -256,11 +432,16 @@ end
 
 local function makeToggle(parent, labelText, default, onChange)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 44)
+    row.Size = UDim2.new(1, 0, 0, 46)
     row.BackgroundColor3 = cRow
     row.BorderSizePixel = 0
     row.Parent = parent
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+
+    local rSt = Instance.new("UIStroke", row)
+    rSt.Color = cLine
+    rSt.Thickness = 1
+    rSt.Transparency = 0.6
 
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -140, 1, 0)
@@ -274,7 +455,7 @@ local function makeToggle(parent, labelText, default, onChange)
     lbl.Parent = row
 
     local stl = Instance.new("TextLabel")
-    stl.Size = UDim2.new(0, 30, 1, 0)
+    stl.Size = UDim2.new(0, 32, 1, 0)
     stl.Position = UDim2.new(1, -90, 0, 0)
     stl.BackgroundTransparency = 1
     stl.Text = default and "ON" or "OFF"
@@ -305,8 +486,8 @@ local function makeToggle(parent, labelText, default, onChange)
 
     btn.MouseButton1Click:Connect(function()
         state = not state
-        btn.BackgroundColor3 = state and cAccent or cMuted
-        dot.Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+        tw(btn, 0.2, {BackgroundColor3 = state and cAccent or cMuted})
+        tw(dot, 0.2, {Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)})
         stl.Text = state and "ON" or "OFF"
         if onChange then pcall(onChange, state) end
     end)
@@ -314,11 +495,16 @@ end
 
 local function makePicker(parent, labelText, options, default, onSelect)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 44)
+    row.Size = UDim2.new(1, 0, 0, 46)
     row.BackgroundColor3 = cRow
     row.BorderSizePixel = 0
     row.Parent = parent
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+
+    local rSt = Instance.new("UIStroke", row)
+    rSt.Color = cLine
+    rSt.Thickness = 1
+    rSt.Transparency = 0.6
 
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -180, 1, 0)
@@ -363,17 +549,19 @@ local function makePicker(parent, labelText, options, default, onSelect)
 
     local popup = Instance.new("Frame")
     popup.Visible = false
-    popup.Size = UDim2.new(0, 170, 0, 0)
+    popup.Size = UDim2.new(0, 180, 0, 0)
     popup.AutomaticSize = Enum.AutomaticSize.Y
-    popup.Position = UDim2.new(1, -178, 1, 6)
-    popup.BackgroundColor3 = cRowHover
+    popup.Position = UDim2.new(1, -188, 1, 6)
+    popup.BackgroundColor3 = cPanel
     popup.BorderSizePixel = 0
     popup.ZIndex = 50
     popup.Parent = row
-    Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", popup).CornerRadius = UDim.new(0, 8)
     local pst = Instance.new("UIStroke", popup)
-    pst.Color = cAccent2
+    pst.Color = cAccent
     pst.Thickness = 1
+    pst.Transparency = 0.5
+
     local pl = Instance.new("UIListLayout", popup)
     pl.Padding = UDim.new(0, 1)
     local pp = Instance.new("UIPadding", popup)
@@ -387,7 +575,7 @@ local function makePicker(parent, labelText, options, default, onSelect)
     for _, opt in ipairs(options or {}) do
         local o = Instance.new("TextButton")
         o.Size = UDim2.new(1, 0, 0, 26)
-        o.BackgroundColor3 = cRowHover
+        o.BackgroundColor3 = cPanel
         o.Text = tostring(opt)
         o.TextColor3 = cLabel
         o.Font = Enum.Font.Gotham
@@ -395,6 +583,8 @@ local function makePicker(parent, labelText, options, default, onSelect)
         o.BorderSizePixel = 0
         o.AutoButtonColor = false
         o.Parent = popup
+        o.MouseEnter:Connect(function() o.BackgroundColor3 = cRowHi end)
+        o.MouseLeave:Connect(function() o.BackgroundColor3 = cPanel end)
         o.MouseButton1Click:Connect(function()
             value = opt
             txt.Text = tostring(opt)
@@ -406,7 +596,7 @@ end
 
 local function makeButton(parent, labelText, onClick)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.Size = UDim2.new(1, 0, 0, 42)
     btn.BackgroundColor3 = cRow
     btn.Text = labelText
     btn.TextColor3 = cLabel
@@ -416,11 +606,20 @@ local function makeButton(parent, labelText, onClick)
     btn.AutoButtonColor = false
     btn.Parent = parent
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    local bSt = Instance.new("UIStroke", btn)
+    bSt.Color = cLine
+    bSt.Thickness = 1
+    bSt.Transparency = 0.6
+
+    btn.MouseEnter:Connect(function() tw(btn, 0.15, {BackgroundColor3 = cRowHi}) end)
+    btn.MouseLeave:Connect(function() tw(btn, 0.15, {BackgroundColor3 = cRow}) end)
     btn.MouseButton1Click:Connect(function()
         if onClick then pcall(onClick) end
     end)
 end
 
+-- FILL VISUAL
 local rarityList = {"Common","Uncommon","Rare","Epic","Legendary","Mythic","Cosmic","Secret","Eternal","Divine"}
 local rarityOptions = {}
 for i, r in ipairs(rarityList) do
@@ -429,7 +628,12 @@ end
 
 local vp_ = tabPages.Visual
 local v1 = makeGroup(vp_, "Egg ESP")
-makeToggle(v1, "Enable Egg ESP", false)
+makeToggle(v1, "Enable Egg ESP", false, function(state)
+    local esp = _G.OR4CLE and _G.OR4CLE.modules and _G.OR4CLE.modules.esp_egg
+    if esp then
+        if state then pcall(esp.start, {}) else pcall(esp.stop) end
+    end
+end)
 local v2 = makeGroup(vp_, "ESP Rarity")
 makePicker(v2, "ESP Min Tier", rarityOptions, "01 Common")
 local v3 = makeGroup(vp_, "ESP Style")
@@ -438,7 +642,9 @@ local v4 = makeGroup(vp_, "ESP Settings")
 makeToggle(v4, "Show Pet Name", true)
 makeToggle(v4, "Show Rarity", true)
 makeToggle(v4, "Show Distance", false)
+makeToggle(v4, "Show Tracer", false)
 
+-- FARM
 local fp = tabPages.Farm
 local f1 = makeGroup(fp, "Auto Steal")
 makeToggle(f1, "Enable Auto Steal", false)
@@ -449,15 +655,19 @@ makeToggle(f2, "Enable Auto Hatch", false)
 makePicker(f2, "Speed", {"Safe","Normal","Turbo"}, "Normal")
 local f3 = makeGroup(fp, "Auto Place")
 makeToggle(f3, "Enable Auto Place", false)
-local f4 = makeGroup(fp, "Speed Boost")
-makeToggle(f4, "Enable Speed Boost", false)
+local f4 = makeGroup(fp, "Auto Treadmill")
+makeToggle(f4, "Enable Auto Treadmill", false)
+local f5 = makeGroup(fp, "Speed Boost")
+makeToggle(f5, "Enable Speed Boost", false)
 
+-- FRIEND
 local frp = tabPages.Friends
 local fr1 = makeGroup(frp, "Drop for Friends")
 makeToggle(fr1, "Enable", false)
 makeToggle(fr1, "Auto Pickup Back", true)
 makeButton(fr1, "Refresh Friend List", function() end)
 
+-- UTILITY
 local ip = tabPages.Info
 local i1 = makeGroup(ip, "Live Info")
 local clk = Instance.new("TextLabel")
@@ -479,6 +689,7 @@ task.spawn(function()
     end
 end)
 
+-- SETTINGS
 local sp = tabPages.Settings
 local s1 = makeGroup(sp, "Performance")
 makeToggle(s1, "Anti Lag", false)
@@ -487,13 +698,24 @@ local s2 = makeGroup(sp, "Server Guard")
 makeToggle(s2, "Enable", false)
 makePicker(s2, "Action", {"Auto-Leave","Auto-Hop","Notify Only"}, "Notify Only")
 local s3 = makeGroup(sp, "Debug")
+makeButton(s3, "Reload Script", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/OzLL-BeeP/or4cle-steal-an-egg/main/init.lua"))()
+end)
 makeButton(s3, "Unload All", function()
     for _, x in ipairs(pg:GetChildren()) do
         if x:IsA("ScreenGui") and x.Name:find("OR4CLE") then x:Destroy() end
     end
 end)
 
+-- ═══════════════════════════════════════
+-- DRAG
+-- ═══════════════════════════════════════
 local dragging, dragStart, startPos
+local function repositionGlow(pos)
+    glow.Position = UDim2.new(pos.X.Scale, pos.X.Offset - 16, pos.Y.Scale, pos.Y.Offset - 16)
+    shadow.Position = UDim2.new(pos.X.Scale, pos.X.Offset - 4, pos.Y.Scale, pos.Y.Offset + 6)
+end
+
 top.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
     or input.UserInputType == Enum.UserInputType.Touch then
@@ -506,8 +728,10 @@ top.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
     or input.UserInputType == Enum.UserInputType.Touch) then
         local d = input.Position - dragStart
-        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X,
-                                   startPos.Y.Scale, startPos.Y.Offset + d.Y)
+        local np = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X,
+                             startPos.Y.Scale, startPos.Y.Offset + d.Y)
+        main.Position = np
+        repositionGlow(np)
     end
 end)
 UIS.InputEnded:Connect(function(input)
@@ -517,12 +741,9 @@ UIS.InputEnded:Connect(function(input)
     end
 end)
 
-closeBtn.MouseButton1Click:Connect(function()
-    for _, x in ipairs(pg:GetChildren()) do
-        if x:IsA("ScreenGui") and x.Name:find("OR4CLE") then x:Destroy() end
-    end
-end)
-
+-- ═══════════════════════════════════════
+-- BUBBLE (upgraded logo overlay)
+-- ═══════════════════════════════════════
 local bubble = Instance.new("ScreenGui")
 bubble.Name = "OR4CLE_Bubble"
 bubble.ResetOnSpawn = false
@@ -530,6 +751,46 @@ bubble.DisplayOrder = 99999
 bubble.IgnoreGuiInset = true
 bubble.Parent = pg
 
+-- outer glow layer
+local bGlow = Instance.new("ImageLabel")
+bGlow.Size = UDim2.new(0, 70, 0, 70)
+bGlow.Position = UDim2.new(0, 20 - 10, 0, 200 - 10)
+bGlow.BackgroundTransparency = 1
+bGlow.Image = LOGO
+bGlow.ImageColor3 = cAccent
+bGlow.ImageTransparency = 0.75
+bGlow.ScaleType = Enum.ScaleType.Crop
+bGlow.ZIndex = 0
+bGlow.Parent = bubble
+Instance.new("UICorner", bGlow).CornerRadius = UDim.new(1, 0)
+
+-- pulse ring
+local bPulse = Instance.new("Frame")
+bPulse.Size = UDim2.new(0, 50, 0, 50)
+bPulse.Position = UDim2.new(0, 20, 0, 200)
+bPulse.BackgroundTransparency = 1
+bPulse.ZIndex = 1
+bPulse.Parent = bubble
+Instance.new("UICorner", bPulse).CornerRadius = UDim.new(1, 0)
+local bPSt = Instance.new("UIStroke", bPulse)
+bPSt.Color = cAccent
+bPSt.Thickness = 2
+bPSt.Transparency = 0.7
+
+-- ring layer
+local bRing = Instance.new("Frame")
+bRing.Size = UDim2.new(0, 56, 0, 56)
+bRing.Position = UDim2.new(0, 20 - 3, 0, 200 - 3)
+bRing.BackgroundTransparency = 1
+bRing.ZIndex = 2
+bRing.Parent = bubble
+Instance.new("UICorner", bRing).CornerRadius = UDim.new(1, 0)
+local bRSt = Instance.new("UIStroke", bRing)
+bRSt.Color = cAccent2
+bRSt.Thickness = 1
+bRSt.Transparency = 0.4
+
+-- main button
 local bb = Instance.new("TextButton")
 bb.Size = UDim2.new(0, 50, 0, 50)
 bb.Position = UDim2.new(0, 20, 0, 200)
@@ -537,12 +798,13 @@ bb.BackgroundColor3 = cBg
 bb.Text = ""
 bb.AutoButtonColor = false
 bb.BorderSizePixel = 0
+bb.ZIndex = 3
 bb.Parent = bubble
 Instance.new("UICorner", bb).CornerRadius = UDim.new(1, 0)
 
-local bst = Instance.new("UIStroke", bb)
-bst.Color = cAccent
-bst.Thickness = 2.5
+local bSt = Instance.new("UIStroke", bb)
+bSt.Color = cAccent
+bSt.Thickness = 2.5
 
 local blogo = Instance.new("ImageLabel")
 blogo.Size = UDim2.new(1, -6, 1, -6)
@@ -550,8 +812,25 @@ blogo.Position = UDim2.new(0, 3, 0, 3)
 blogo.BackgroundTransparency = 1
 blogo.Image = LOGO
 blogo.ScaleType = Enum.ScaleType.Crop
+blogo.ZIndex = 4
 blogo.Parent = bb
 Instance.new("UICorner", blogo).CornerRadius = UDim.new(1, 0)
+
+-- pulse animation
+task.spawn(function()
+    while bPulse.Parent do
+        bPSt.Transparency = 0.7
+        bPulse.Size = UDim2.new(0, 50, 0, 50)
+        local t1 = Tween:Create(bPulse, TweenInfo.new(1.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 80, 0, 80),
+        })
+        local t2 = Tween:Create(bPSt, TweenInfo.new(1.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Transparency = 1,
+        })
+        t1:Play(); t2:Play()
+        task.wait(1.8)
+    end
+end)
 
 local bdrag, bstart, bpos
 bb.InputBegan:Connect(function(input)
@@ -564,7 +843,11 @@ bb.InputChanged:Connect(function(input)
     if bdrag and (input.UserInputType == Enum.UserInputType.MouseMovement
     or input.UserInputType == Enum.UserInputType.Touch) then
         local d = input.Position - bstart
-        bb.Position = UDim2.new(bpos.X.Scale, bpos.X.Offset + d.X, bpos.Y.Scale, bpos.Y.Offset + d.Y)
+        local np = UDim2.new(bpos.X.Scale, bpos.X.Offset + d.X, bpos.Y.Scale, bpos.Y.Offset + d.Y)
+        bb.Position = np
+        bGlow.Position = UDim2.new(np.X.Scale, np.X.Offset - 10, np.Y.Scale, np.Y.Offset - 10)
+        bRing.Position = UDim2.new(np.X.Scale, np.X.Offset - 3, np.Y.Scale, np.Y.Offset - 3)
+        bPulse.Position = np
     end
 end)
 UIS.InputEnded:Connect(function(input)
@@ -573,6 +856,9 @@ UIS.InputEnded:Connect(function(input)
         bdrag = false
     end
 end)
+
+bb.MouseEnter:Connect(function() tw(bSt, 0.15, {Thickness = 3.5}) end)
+bb.MouseLeave:Connect(function() tw(bSt, 0.15, {Thickness = 2.5}) end)
 
 bb.MouseButton1Click:Connect(function()
     gui.Enabled = not gui.Enabled
@@ -585,6 +871,7 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
+-- recenter
 task.defer(function()
     local vp2 = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(800,600)
     local as = main.AbsoluteSize
@@ -592,6 +879,8 @@ task.defer(function()
         local px = math.max(4, math.floor((vp2.X - as.X) / 2))
         local py = math.max(30, math.floor((vp2.Y - as.Y) / 2))
         main.Position = UDim2.new(0, px, 0, py)
+        glow.Position = UDim2.new(0, px - 16, 0, py - 16)
+        shadow.Position = UDim2.new(0, px - 4, 0, py + 6)
     end
 end)
 
