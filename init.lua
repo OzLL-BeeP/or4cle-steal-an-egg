@@ -963,3 +963,19 @@ _G.OR4CLE.version = VERSION
 _G.OR4CLE.loaded = true
 
 warn("[OR4CLE] v" .. VERSION)
+
+
+-- final recenter (fallback)
+task.spawn(function()
+    for attempt = 1, 20 do
+        task.wait(0.1)
+        local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize
+        if vp and main.AbsoluteSize.X > 50 then
+            local sz = main.AbsoluteSize
+            local px = math.max(10, math.floor((vp.X - sz.X) / 2))
+            local py = math.max(50, math.floor((vp.Y - sz.Y) / 2) + 20)
+            main.Position = UDim2.new(0, px, 0, py)
+            break
+        end
+    end
+end)
